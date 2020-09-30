@@ -86,7 +86,7 @@ namespace HttpSequencer
             catch (Exception e)
             {
                 log.Error(e);
-                return 1;
+                return 2;
             }
             //finally
             //{

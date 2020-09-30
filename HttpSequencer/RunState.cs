@@ -7,6 +7,11 @@ namespace HttpSequencer
 {
     public class RunState
     {
+        public RunState()
+        {
+            FailedSequenceActions = new List<ISequenceItemAction>();
+        }
+
         public List<ISequenceItemAction> FailedSequenceActions { get; set; }
 
         public ILogger Log { get; set; }
