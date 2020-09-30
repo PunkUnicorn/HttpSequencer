@@ -8,69 +8,96 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using static HttpSequencer.SequenceItemActions.SequenceItemStatic;
 
 namespace HttpSequencer.SequenceItemActions
 {
     public class SequenceItemSend : ISequenceItemAction
     {
-        private readonly SequenceItem sequenceItem;
-        private readonly RunState state;
-
-        //public bool IsFail { get; private set; }
-
         public string workingUri { get; internal set; }
         public string workingBody { get; private set; }
 
-        public SequenceItemSend(RunState state, SequenceItem sequenceItem)
+
+        private readonly object model;
+        private readonly IEnumerable<SequenceItem> nextSequenceItems;
+        private readonly RunState state;
+        private readonly SequenceItem sequenceItem;
+
+        public SequenceItemSend(RunState state, SequenceItem sequenceItem, object model, IEnumerable<SequenceItem> nextSequenceItems)
         {
-            this.sequenceItem = sequenceItem;
             this.state = state;
+            this.sequenceItem = sequenceItem;
+            this.model = Clone(model);
+            this.nextSequenceItems = nextSequenceItems;
+            Children = new List<ISequenceItemAction>();
         }
 
-        public async Task<object> Action(object model)
+        public ISequenceItemAction Create(RunState state, SequenceItem sequenceItem, object model, IEnumerable<SequenceItem> nextSequenceItems)
         {
-            if (this.sequenceItem.send == null)
-                return null;
+            return new SequenceItemSend(state, sequenceItem, model, nextSequenceItems);
+        }
 
-            var modelUrl = this.sequenceItem.send.url ?? "";
-            var scribanModel = new
-            {
-                run_id = this.state.RunId,
-                command_args = this.state.CommandLineOptions,
-                previous_response = model,
-                sequence_item = this.sequenceItem
-            };
-            this.workingUri = ScribanUtil.ScribanParse(this.sequenceItem.send.url, scribanModel);
+        public ISequenceItemAction Parent { get; set; }
 
-            this.state.Log.Info($"Processing {this.workingUri}...");
+        public List<ISequenceItemAction> Children { get; }
 
-            dynamic responseModel = null;
-            using (var client = MakeClientWithHeaders(this.state.CommandLineOptions, this.state.YamlOptions, this.sequenceItem))
-            try
-            {
-                var http_response = await DoSendAction(client, scribanModel);
+        public int ActionExecuteCount { get; set; }
 
-                var responseContentLength = http_response?.Content?.Headers?.ContentLength ?? 0;
-                var responseContent = responseContentLength > 0
-                    ? (await http_response?.Content?.ReadAsStringAsync())
-                    : string.Empty;
+        public ISequenceItemAction Fail(Exception e = null)
+        {
+            IsFail = true;
+            Exception = e ?? Exception;
+            return this;
+        }
 
-                this.state.ProgressLog.Progress($" received {responseContentLength} bytes...");
-                responseModel = SequenceItemStatic.GetResponseItems(this.state, this.sequenceItem, responseContent);
+        public bool IsFail { get; set; }
 
-                SavingContentsEtc(Guid.NewGuid().ToString(), responseModel, http_response, responseContentLength, responseContent);
-            }
-            catch (Exception e)
-            {
-                //GenericExceptionHandler(e, o?.Command ?? ("-" + nameof(ProcessCommandItem)));
+        public Exception Exception { get; set; }
 
-                state.Exceptions.Add( (e.Message, e) );
-                if (this.sequenceItem.is_abort_on_exception)
-                    throw;
-            }
+        public SequenceItem GetSequenceItem() => this.sequenceItem;
 
-            return responseModel;
+        public dynamic GetModel() => this.model;
+
+        public async Task<object> Action(CancellationToken cancelToken)
+        {
+            return await FailableRun<Task<object>>(this, async delegate {
+                ++this.ActionExecuteCount;
+            
+                if (this.sequenceItem.send == null)
+                    return null;
+
+                var modelUrl = this.sequenceItem.send.url ?? "";
+                var scribanModel = new
+                {
+                    run_id = this.state.RunId,
+                    command_args = this.state.CommandLineOptions,
+                    previous_response = this.model,
+                    sequence_item = this.sequenceItem
+                };
+                this.workingUri = ScribanUtil.ScribanParse(this.sequenceItem.send.url, scribanModel);
+
+                this.state.Log.Info($"Processing {this.workingUri}...");
+
+                dynamic responseModel = null;
+                using (var client = MakeClientWithHeaders(this.state.CommandLineOptions, this.state.YamlOptions, this.sequenceItem))
+                {
+                    var http_response = await DoSendAction(client, scribanModel);
+
+                    var responseContentLength = http_response?.Content?.Headers?.ContentLength ?? 0;
+                    var responseContent = responseContentLength > 0
+                        ? (await http_response?.Content?.ReadAsStringAsync())
+                        : string.Empty;
+
+                    this.state.ProgressLog.Progress($" received {responseContentLength} bytes...");
+                    responseModel = SequenceItemStatic.GetResponseItems(this.state, this.sequenceItem, responseContent);
+
+                    SavingContentsEtc(Guid.NewGuid().ToString(), responseModel, http_response, responseContentLength, responseContent);
+                }
+
+                return responseModel;
+            });
         }
 
         private async Task<HttpResponseMessage> DoSendAction(HttpClient client, object scribanModel)

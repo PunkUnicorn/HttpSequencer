@@ -1,7 +1,10 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace HttpSequencer.SequenceItemActions
@@ -28,5 +31,21 @@ namespace HttpSequencer.SequenceItemActions
             return responseModel;
         }
 
+        public static object Clone(object model)
+        {
+            return JsonConvert.DeserializeObject<ExpandoObject>(JsonConvert.SerializeObject(model)) as dynamic;
+        }
+
+        public static T FailableRun<T>(ISequenceItemAction sia, Func<T> f)
+        { 
+            try { return f(); } 
+            catch (Exception e) 
+            { 
+                sia.Exception = e; 
+                sia.IsFail = true; 
+            };
+
+            return default(T);
+        }
     }
 }
