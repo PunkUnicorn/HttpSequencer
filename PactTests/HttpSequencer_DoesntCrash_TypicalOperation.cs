@@ -1,5 +1,6 @@
 ﻿using HttpSequencer;
 using PactNet.Mocks.MockHttpService.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Xunit;
@@ -12,9 +13,20 @@ namespace PactTests
     /// 
     /// Stylish text from:
     /// https://lingojam.com/StylishTextGenerator
+    /// 
+    /// Blocky text from:
+    /// https://fsymbols.com/generators/carty/
     /// </summary>
-    public class HttpSequencer_BasicTests
+    //[Collection("PortAllocationCollection")]
+    public class HttpSequencer_DoesntCrash_TypicalOperation
     {
+        private readonly PortAllocationFixture mrPorty = new PortAllocationFixture(1000);
+
+        public Func<int> GetAvailablePort => mrPorty.GetAvailablePort;
+
+        public HttpSequencer_DoesntCrash_TypicalOperation()
+        {
+        }
         // Fails with no yaml
 
         // Fails with invalid url
@@ -27,11 +39,11 @@ namespace PactTests
 
 
         [Fact]
-        public void HttpSequencer_OneSequenceDoesntCrash()
+        public void HttpSequencer_DoesntCrash_OneSequence()
         {
-            var testPort = 7878;
+            var testPort = GetAvailablePort();// 7878;
 
-            using (var ConsumeTestYaml1Pact = new ConsumeTestYaml1Pact("TestConsumer", testPort))
+            using (var ConsumeTestYaml1Pact = new ConsumeHttpSequencerPact("TestConsumer", testPort))
             {
                 ConsumeTestYaml1Pact.MockProviderService.ClearInteractions();
 
@@ -106,26 +118,26 @@ namespace PactTests
         }
 
         [Fact]
-        public void HttpSequencer_TwoSequencesDoesntCrash()
+        public void HttpSequencer_DoesntCrash_TwoSequences()
         {
-            const int firstTestPort = 7879;
-            const int secondTestPort = 7880;
+            int firstTestPort = GetAvailablePort(); //7879;
+            int secondTestPort = GetAvailablePort(); //7880;
 
-            using (var ConsumeTestYamlPact_First = new ConsumeTestYaml1Pact("FirstConsumer", firstTestPort)) 
-            using (var ConsumeTestYamlPact_Second = new ConsumeTestYaml1Pact("SecondConsumer", secondTestPort))
+            using (var ConsumeTestYamlPact_First = new ConsumeHttpSequencerPact("FirstConsumer", firstTestPort)) 
+            using (var ConsumeTestYamlPact_Second = new ConsumeHttpSequencerPact("SecondConsumer", secondTestPort))
             {
                 ConsumeTestYamlPact_First.MockProviderService.ClearInteractions(); 
-                ConsumeTestYamlPact_Second.MockProviderService.ClearInteractions(); 
+                ConsumeTestYamlPact_Second.MockProviderService.ClearInteractions();
 
 
-                /*    :::     :::::::::  :::::::::      :::     ::::    :::  ::::::::  :::::::::: 
-                    :+: :+:   :+:    :+: :+:    :+:   :+: :+:   :+:+:   :+: :+:    :+: :+:        
-                   +:+   +:+  +:+    +:+ +:+    +:+  +:+   +:+  :+:+:+  +:+ +:+        +:+        
-                  +#++:++#++: +#++:++#:  +#++:++#:  +#++:++#++: +#+ +:+ +#+ :#:        +#++:++#   
-                  +#+     +#+ +#+    +#+ +#+    +#+ +#+     +#+ +#+  +#+#+# +#+   +#+# +#+        
-                  #+#     #+# #+#    #+# #+#    #+# #+#     #+# #+#   #+#+# #+#    #+# #+#        
-                  ###     ### ###    ### ###    ### ###     ### ###    ####  ########  ########## 
-                                                                                                    */
+                /* 
+                ░█████╗░██████╗░██████╗░░█████╗░███╗░░██╗░██████╗░███████╗
+                ██╔══██╗██╔══██╗██╔══██╗██╔══██╗████╗░██║██╔════╝░██╔════╝
+                ███████║██████╔╝██████╔╝███████║██╔██╗██║██║░░██╗░█████╗░░
+                ██╔══██║██╔══██╗██╔══██╗██╔══██║██║╚████║██║░░╚██╗██╔══╝░░
+                ██║░░██║██║░░██║██║░░██║██║░░██║██║░╚███║╚██████╔╝███████╗
+                ╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝░╚═════╝░╚══════╝ */
+
                 const string expectedMoreDetailString = nameof(expectedMoreDetailString);
 
                 ConsumeTestYamlPact_First.MockProviderService
@@ -192,26 +204,26 @@ namespace PactTests
                 var testOptions = new HttpSequencer.Options { YamlDirect = testYamlSequence };
 
 
-                /*    :::      ::::::::  ::::::::::: 
-                    :+: :+:   :+:    :+:     :+:     
-                   +:+   +:+  +:+            +:+     
-                  +#++:++#++: +#+            +#+     
-                  +#+     +#+ +#+            +#+     
-                  #+#     #+# #+#    #+#     #+#     
-                  ###     ###  ########      ###     
-                                                      */
+                /*
+                ░█████╗░░█████╗░████████╗
+                ██╔══██╗██╔══██╗╚══██╔══╝
+                ███████║██║░░╚═╝░░░██║░░░
+                ██╔══██║██║░░██╗░░░██║░░░
+                ██║░░██║╚█████╔╝░░░██║░░░
+                ╚═╝░░╚═╝░╚════╝░░░░╚═╝░░░ */
+
                 var consumer = new HttpSequencer.HttpSequencer();
                 var result = consumer.RunSequence(testOptions);
 
 
-                /*    :::      ::::::::   ::::::::  :::::::::: :::::::::  ::::::::::: 
-                    :+: :+:   :+:    :+: :+:    :+: :+:        :+:    :+:     :+:     
-                   +:+   +:+  +:+        +:+        +:+        +:+    +:+     +:+     
-                  +#++:++#++: +#++:++#++ +#++:++#++ +#++:++#   +#++:++#:      +#+     
-                  +#+     +#+        +#+        +#+ +#+        +#+    +#+     +#+     
-                  #+#     #+# #+#    #+# #+#    #+# #+#        #+#    #+#     #+#     
-                  ###     ###  ########   ########  ########## ###    ###     ###       
-                                                                                        */
+                /*
+                ░█████╗░░██████╗░██████╗███████╗██████╗░████████╗
+                ██╔══██╗██╔════╝██╔════╝██╔════╝██╔══██╗╚══██╔══╝
+                ███████║╚█████╗░╚█████╗░█████╗░░██████╔╝░░░██║░░░
+                ██╔══██║░╚═══██╗░╚═══██╗██╔══╝░░██╔══██╗░░░██║░░░
+                ██║░░██║██████╔╝██████╔╝███████╗██║░░██║░░░██║░░░
+                ╚═╝░░╚═╝╚═════╝░╚═════╝░╚══════╝╚═╝░░╚═╝░░░╚═╝░░░ */
+
                 Assert.Equal(0, result);
 
                 ConsumeTestYamlPact_First.MockProviderService.VerifyInteractions();
@@ -220,13 +232,13 @@ namespace PactTests
         }
 
         [Fact]
-        public void HttpSequencer_TwoSequencesWithACheckDoesntCrash_CheckPasses()
+        public void HttpSequencer_DoesntCrash_ThreeSequences_CheckPasses()
         {
-            const int firstTestPort = 7883;
-            const int secondTestPort = 7884;
+            int firstTestPort = GetAvailablePort(); //7883;
+            int secondTestPort = GetAvailablePort(); //7884;
 
-            using (var ConsumeTestYamlPact_First = new ConsumeTestYaml1Pact("FirstConsumer", firstTestPort))
-            using (var ConsumeTestYamlPact_Second = new ConsumeTestYaml1Pact("SecondConsumer", secondTestPort))
+            using (var ConsumeTestYamlPact_First = new ConsumeHttpSequencerPact("FirstConsumer", firstTestPort))
+            using (var ConsumeTestYamlPact_Second = new ConsumeHttpSequencerPact("SecondConsumer", secondTestPort))
             {
                 ConsumeTestYamlPact_First.MockProviderService.ClearInteractions();
                 ConsumeTestYamlPact_Second.MockProviderService.ClearInteractions();
@@ -325,13 +337,13 @@ namespace PactTests
         }
 
         [Fact]
-        public void HttpSequencer_TwoSequencesWithACheckDoesntCrash_CheckFails()
+        public void HttpSequencer_DoesntCrash_ThreeSequences_CheckFails()
         {
-            const int firstTestPort = 7883;
-            const int secondTestPort = 7884;
+            int firstTestPort = GetAvailablePort(); //7883;
+            int secondTestPort = GetAvailablePort(); //7884;
 
-            using (var ConsumeTestYamlPact_First = new ConsumeTestYaml1Pact("FirstConsumer", firstTestPort))
-            using (var ConsumeTestYamlPact_Second = new ConsumeTestYaml1Pact("SecondConsumer", secondTestPort))
+            using (var ConsumeTestYamlPact_First = new ConsumeHttpSequencerPact("FirstConsumer", firstTestPort))
+            using (var ConsumeTestYamlPact_Second = new ConsumeHttpSequencerPact("SecondConsumer", secondTestPort))
             {
                 ConsumeTestYamlPact_First.MockProviderService.ClearInteractions();
                 ConsumeTestYamlPact_Second.MockProviderService.ClearInteractions();

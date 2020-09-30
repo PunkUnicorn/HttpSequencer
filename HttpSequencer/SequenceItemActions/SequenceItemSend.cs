@@ -16,8 +16,8 @@ namespace HttpSequencer.SequenceItemActions
 {
     public class SequenceItemSend : ISequenceItemAction
     {
-        public string workingUri { get; internal set; }
-        public string workingBody { get; private set; }
+        public string WorkingUri { get; private set; }
+        public string WorkingBody { get; private set; }
 
 
         private readonly object model;
@@ -76,9 +76,9 @@ namespace HttpSequencer.SequenceItemActions
                     previous_response = this.model,
                     sequence_item = this.sequenceItem
                 };
-                this.workingUri = ScribanUtil.ScribanParse(this.sequenceItem.send.url, scribanModel);
+                this.WorkingUri = ScribanUtil.ScribanParse(this.sequenceItem.send.url, scribanModel);
 
-                this.state.Log.Info($"Processing {this.workingUri}...");
+                this.state.Log.Info($"Processing {this.WorkingUri}...");
 
                 dynamic responseModel = null;
                 using (var client = MakeClientWithHeaders(this.state.CommandLineOptions, this.state.YamlOptions, this.sequenceItem))
@@ -105,22 +105,22 @@ namespace HttpSequencer.SequenceItemActions
             this.state.Log.Info($" using method '{this.sequenceItem.send.http_method}'...");
 
             if (this.sequenceItem.send.query != null)
-                workingUri = AppendSendActionQuery(this.workingUri, scribanModel);
+                WorkingUri = AppendSendActionQuery(this.WorkingUri, scribanModel);
 
             if (this.sequenceItem.send?.body != null)
             {
-                this.workingBody = ScribanUtil.ScribanParse(this.sequenceItem.send.body, scribanModel);
-                this.state.Log.Info($" using content body '{this.workingBody}'...");
+                this.WorkingBody = ScribanUtil.ScribanParse(this.sequenceItem.send.body, scribanModel);
+                this.state.Log.Info($" using content body '{this.WorkingBody}'...");
 
                 if (this.sequenceItem.send.save_body_filename != null)
-                    SaveSendActionBody(scribanModel, workingBody);
+                    SaveSendActionBody(scribanModel, WorkingBody);
             }
 
-            this.state.Log.Info($" using url '{this.workingUri}'...");
+            this.state.Log.Info($" using url '{this.WorkingUri}'...");
 
             // Process the response content
             var contenType = this.sequenceItem.send.content_type ?? "text/plain";
-            return await SortOutHttpMethodAndReturnResult(this.sequenceItem.max_retrys, client, this.sequenceItem.send.http_method, contenType, workingBody);
+            return await SortOutHttpMethodAndReturnResult(this.sequenceItem.max_retrys, client, this.sequenceItem.send.http_method, contenType, WorkingBody);
         }
 
         private string AppendSendActionQuery(string workingUri, object scribanModel)
@@ -203,7 +203,7 @@ namespace HttpSequencer.SequenceItemActions
 
                 var ret = policy.Execute<Task<HttpResponseMessage>>(async () => 
                 { 
-                    var url = this.workingUri;
+                    var url = this.WorkingUri;
                     switch (method.ToUpper())
                     {
                         case "GET":
