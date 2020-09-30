@@ -24,7 +24,7 @@ namespace PactTests
         public Func<int> GetAvailablePort => mrPorty.GetAvailablePort;
 
         [Fact]
-        public void HttpSequencer_DoesntCrash_NoYaml()
+        public void NoYaml()
         {
             /* Arrange */
             var testOptions = new Options();
@@ -38,7 +38,7 @@ namespace PactTests
         }
 
         [Fact]
-        public void HttpSequencer_DoesntCrash_InvalidUrl()
+        public void InvalidUrl()
         {
             /* Arrange */
             var testYamlSequence = new YamlOptions
@@ -67,7 +67,7 @@ namespace PactTests
         }
 
         [Fact]
-        public void HttpSequencer_DoesntCrash_InvalidUrlForSecondSequenceItem()
+        public void InvalidUrlForSecondSequenceItem()
         {
             int testPort = GetAvailablePort();
 
@@ -119,16 +119,7 @@ namespace PactTests
                                 http_method = "GET",
                                 url = "http://doesnt-even-exist-7djemd/totally-invalid-url/{{previous_response.Id}}"
                             }
-                        },
-                        ///* Check */
-                        //new SequenceItem
-                        //{
-                        //    command = "check",
-                        //    check = new SequenceCheck
-                        //    {
-                        //        pass_template = "{{if previous_response.detail=='expectedMoreDetailString'}}true{{else}}false{{end}}"
-                        //    }
-                        //}
+                        }
                     }
                 };
 
@@ -145,7 +136,7 @@ namespace PactTests
         }
 
         [Fact]
-        public void HttpSequencer_DoesntCrash_LoadYaml_ExpectSuccess()
+        public void LoadYaml_ExpectSuccess()
         {
             int testPort = GetAvailablePort();
 
@@ -194,13 +185,13 @@ sequence_items:
         }
 
         [Fact]
-        public void HttpSequencer_DoesntCrash_LoadYaml_ExpectFail()
+        public void LoadYaml_ExpectFail()
         {
             const string invalidYamlContents = @"---
 sequence_items:
   - command: start
     send:
-      http_m.... <!SYSTEM ERRORFZzzxsh h͜e҉͇͈͎̞ ̙̫̖̻͖͞co̙͙̖̠̟̯̙m̫̦̹͔e͚̦͓̖̝s̘͖̣̼̫̠̙̀";
+      http_m.... <!SYSTEM ERRORFZzzxsh he҉͇͈͎̞ ̙̫̖̻͖͞co̙͙̖̠̟̯̙m̫̦̹͔e͚̦͓̖̝s̘͖̣̼̫̠̙̀";
 
             using (var t = new TempFile())
             {

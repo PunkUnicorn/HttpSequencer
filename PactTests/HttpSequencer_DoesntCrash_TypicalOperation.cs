@@ -39,7 +39,7 @@ namespace PactTests
 
 
         [Fact]
-        public void HttpSequencer_DoesntCrash_OneSequence()
+        public void OneSequence()
         {
             var testPort = GetAvailablePort();// 7878;
 
@@ -118,7 +118,7 @@ namespace PactTests
         }
 
         [Fact]
-        public void HttpSequencer_DoesntCrash_TwoSequences()
+        public void TwoSequences()
         {
             int firstTestPort = GetAvailablePort(); //7879;
             int secondTestPort = GetAvailablePort(); //7880;
@@ -232,7 +232,7 @@ namespace PactTests
         }
 
         [Fact]
-        public void HttpSequencer_DoesntCrash_ThreeSequences_CheckPasses()
+        public void ThreeSequences_CheckPasses()
         {
             int firstTestPort = GetAvailablePort(); //7883;
             int secondTestPort = GetAvailablePort(); //7884;
@@ -337,10 +337,10 @@ namespace PactTests
         }
 
         [Fact]
-        public void HttpSequencer_DoesntCrash_ThreeSequences_CheckFails()
+        public void ThreeSequences_CheckFails()
         {
-            int firstTestPort = GetAvailablePort(); //7883;
-            int secondTestPort = GetAvailablePort(); //7884;
+            int firstTestPort = GetAvailablePort();
+            int secondTestPort = GetAvailablePort();
 
             using (var ConsumeTestYamlPact_First = new ConsumeHttpSequencerPact("FirstConsumer", firstTestPort))
             using (var ConsumeTestYamlPact_Second = new ConsumeHttpSequencerPact("SecondConsumer", secondTestPort))
