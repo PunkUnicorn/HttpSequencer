@@ -147,9 +147,9 @@ namespace HttpSequencer
             foreach (var sequenceItemAction in toRetry) 
             try 
             {
-                var retriesLeft = (sequenceItemAction.GetSequenceItem().max_retrys ?? 1) - sequenceItemAction.ActionExecuteCount;
+                var retriesLeft = (sequenceItemAction.GetSequenceItem().max_retrys ?? 0) - sequenceItemAction.ActionExecuteCount;
                 if (retriesLeft <= 0)
-                    return false;
+                    continue;
 
                 var policy = Policy.Handle<Exception>().Retry(retriesLeft);
 
