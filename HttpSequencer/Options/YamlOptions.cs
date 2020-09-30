@@ -74,7 +74,7 @@ namespace HttpSequencer
 		public string response_filename { get; set; }
 	}
 
-	public class CurtNameList : List<KeyValuePair<string /*name*/, string /*value*/>> { }
+	public class KeyValueList : List<KeyValuePair<string /*name*/, string /*value*/>> { }
 
 	public class Run
 	{
@@ -93,8 +93,8 @@ namespace HttpSequencer
 		public string base_url { get; set; }
 		public string url { get; set; }
 		public string content_type { get; set; }
-		public CurtNameList query { get; set; }
-		public CurtNameList header { get; set; }
+		public KeyValueList query { get; set; }
+		public KeyValueList header { get; set; }
 		public string body { get; set; }
 		public string save_body_filename { get; set; }
 		public string save_response_filename { get; set; }

@@ -182,7 +182,7 @@ namespace PactTests
                             command = "one-of-two",
                             send = new UrlRequest
                             {
-                                header = new CurtNameList { new KeyValuePair<string, string>("Accept", "application/json" ) },
+                                header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
                                 http_method = "GET",
                                 url = $"http://localhost:{firstTestPort}/first"
                             }
@@ -193,7 +193,7 @@ namespace PactTests
                             command = "two-of-two",
                             send = new UrlRequest
                             {
-                                header = new CurtNameList { new KeyValuePair<string, string>("Accept", "application/json" ) },
+                                header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
                                 http_method = "GET",
                                 url = $"http://localhost:{secondTestPort}/second/" + "{{previous_response.Id}}"
                             }
@@ -290,7 +290,7 @@ namespace PactTests
                             command = "one-of-two",
                             send = new UrlRequest
                             {
-                                header = new CurtNameList { new KeyValuePair<string, string>("Accept", "application/json" ) },
+                                header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
                                 http_method = "GET",
                                 url = $"http://localhost:{firstTestPort}/first"
                             }
@@ -301,7 +301,7 @@ namespace PactTests
                             command = "two-of-two",
                             send = new UrlRequest
                             {
-                                header = new CurtNameList { new KeyValuePair<string, string>("Accept", "application/json" ) },
+                                header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
                                 http_method = "GET",
                                 url = $"http://localhost:{secondTestPort}/second/" + "{{previous_response.Id}}"
                             }
@@ -395,7 +395,7 @@ namespace PactTests
                             command = "one-of-two",
                             send = new UrlRequest
                             {
-                                header = new CurtNameList { new KeyValuePair<string, string>("Accept", "application/json" ) },
+                                header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
                                 http_method = "GET",
                                 url = $"http://localhost:{firstTestPort}/first"
                             }
@@ -406,7 +406,7 @@ namespace PactTests
                             command = "two-of-two",
                             send = new UrlRequest
                             {
-                                header = new CurtNameList { new KeyValuePair<string, string>("Accept", "application/json" ) },
+                                header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
                                 http_method = "GET",
                                 url = $"http://localhost:{secondTestPort}/second/" + "{{previous_response.Id}}"
                             }

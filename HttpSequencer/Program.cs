@@ -79,6 +79,7 @@ namespace HttpSequencer
 
                 // Pass in the chain of command to do after
                 var waitFor = ProcessSequenceItem(state, null, null, sequenceItem, yaml.sequence_items.Skip(1), breadcrumbs);
+                waitFor.Wait();
                 var result = waitFor.Result;
 
                 return result ? 0 : 1;
@@ -138,7 +139,7 @@ namespace HttpSequencer
                 result = await SequenceItemRetryDispatcher(cancelToken, retryAfter, state, retryFailures, breadcrumbs);
            
 
-            return result || retryAfter.Any();
+            return result && !retryAfter.Any();
         }
 
         private static async Task<bool> SequenceItemRetryDispatcher(CancellationToken cancelToken, IEnumerable<ISequenceItemAction> toRetry, RunState state, Stack<ISequenceItemAction> retryAfterList, Stack<ISequenceItemAction> breadcrumbs)

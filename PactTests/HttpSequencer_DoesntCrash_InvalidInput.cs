@@ -49,7 +49,7 @@ namespace PactTests
                         command = "one-and-only",
                         send = new UrlRequest
                         {
-                            header = new CurtNameList { new KeyValuePair<string, string>("Accept", "application/json" ) },
+                            header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
                             http_method = "GET",
                             url = "http://doesnt-even-exist-7djemd/totally-invalid-url"
                         }
@@ -69,10 +69,9 @@ namespace PactTests
         [Fact]
         public void HttpSequencer_DoesntCrash_InvalidUrlForSecondSequenceItem()
         {
-            int firstTestPort = GetAvailablePort();
-            int secondTestPort = GetAvailablePort();
+            int testPort = GetAvailablePort();
 
-            using (var ConsumeTestYamlPact = new ConsumeHttpSequencerPact("FirstConsumer", firstTestPort))
+            using (var ConsumeTestYamlPact = new ConsumeHttpSequencerPact("FirstConsumer", testPort))
             {
                 ConsumeTestYamlPact.MockProviderService.ClearInteractions();
 
@@ -105,9 +104,9 @@ namespace PactTests
                             command = "one-of-two",
                             send = new UrlRequest
                             {
-                                header = new CurtNameList { new KeyValuePair<string, string>("Accept", "application/json" ) },
+                                header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
                                 http_method = "GET",
-                                url = $"http://localhost:{firstTestPort}/first"
+                                url = $"http://localhost:{testPort}/first"
                             }
                         },
                         /* Second */
@@ -116,7 +115,7 @@ namespace PactTests
                             command = "two-of-two",
                             send = new UrlRequest
                             {
-                                header = new CurtNameList { new KeyValuePair<string, string>("Accept", "application/json" ) },
+                                header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
                                 http_method = "GET",
                                 url = "http://doesnt-even-exist-7djemd/totally-invalid-url/{{previous_response.Id}}"
                             }
@@ -145,37 +144,41 @@ namespace PactTests
             }
         }
 
-        public class TempFile : IDisposable
-        {
-            public TempFile()
-            {
-                Filename = Path.GetTempFileName();
-            }
-
-            public string Filename { get; }
-
-            public void Dispose()
-            {
-                File.Delete(Filename);
-            }
-        }
-
         [Fact]
         public void HttpSequencer_DoesntCrash_LoadYaml_ExpectSuccess()
         {
-            /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮 */
-            const string contents = @"
----
+            int testPort = GetAvailablePort();
+
+            string yamlContents = $@"---
 sequence_items:
   - command: start
     send:
       http_method: GET
-      url: www.google.com
-";
+      url: http://localhost:{testPort}";
 
+            using (var consumeTestYamlPact = new ConsumeHttpSequencerPact("FirstConsumer", testPort))
             using (var t = new TempFile())
             {
-                File.WriteAllText(t.Filename, contents);
+                consumeTestYamlPact.MockProviderService.ClearInteractions();
+
+                /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮 */
+                File.WriteAllText(t.Filename, yamlContents);
+
+                consumeTestYamlPact.MockProviderService
+                    .Given("There is an active endpoint")
+                    .UponReceiving("A GET request to touch the endpoint")
+                    .With(new ProviderServiceRequest
+                    {
+                        Method = HttpVerb.Get,
+                        Path = "/",
+                        Headers = new Dictionary<string, object> { { "Accept", "text/plain" } },
+                    })
+                    .WillRespondWith(new ProviderServiceResponse
+                    {
+                        Status = 200,
+                        Headers = new Dictionary<string, object> { { "Content-Type", "application/json; charset=utf-8" } },
+                        Body = { }
+                    });
 
                 var testOptions = new Options { YamlFile = t.Filename };
 
@@ -185,26 +188,26 @@ sequence_items:
 
                 /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
                 Assert.Equal(0, result);
+                consumeTestYamlPact.MockProviderService.VerifyInteractions();
+                
             }
         }
 
         [Fact]
         public void HttpSequencer_DoesntCrash_LoadYaml_ExpectFail()
         {
-            /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮 */
-            const string contents = @"
----
+            const string invalidYamlContents = @"---
 sequence_items:
   - command: start
     send:
-      http_m"; // Incomplete yaml
+      http_m.... <!SYSTEM ERRORFZzzxsh h͜e҉͇͈͎̞ ̙̫̖̻͖͞co̙͙̖̠̟̯̙m̫̦̹͔e͚̦͓̖̝s̘͖̣̼̫̠̙̀";
 
             using (var t = new TempFile())
             {
-                File.WriteAllText(t.Filename, contents);
+                /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮 */
+                File.WriteAllText(t.Filename, invalidYamlContents);
 
                 var testOptions = new Options { YamlFile = t.Filename };
-
 
                 /* 𝓐𝓬𝓽 */
                 var consumer = new HttpSequencer.HttpSequencer();
