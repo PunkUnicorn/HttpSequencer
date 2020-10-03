@@ -89,15 +89,6 @@ namespace HttpSequencer
                 log.Error(e);
                 return 2;
             }
-            //finally
-            //{
-            //    if (state.Exceptions.Any())
-            //    { 
-            //        log.Error("\nThe following exceptions were encountered during the run:");
-            //        foreach (var exception in state.Exceptions)
-            //            log.Error(exception);
-            //    }
-            //}
         }
 
         private static IProgressLog MakeProgressLogger()
@@ -125,8 +116,8 @@ namespace HttpSequencer
             if (sequenceItem.is_model_array) 
             {
                 var itemsRunning = new List<Task<bool>>();
-                foreach (var item in model as IEnumerable<Task<bool>>)
-                    itemsRunning.Add(SequenceItemDispatcher(state, parent, model, sequenceItem, nextSequenceItems, retryAfter, breadcrumbs));
+                foreach (var item in model as IEnumerable<object> ?? new object[] { })
+                    itemsRunning.Add(SequenceItemDispatcher(state, parent, item, sequenceItem, nextSequenceItems, retryAfter, breadcrumbs));
 
                 var allResults = await Task<bool []>.WhenAll(itemsRunning);
                 result = allResults.All(a => a);

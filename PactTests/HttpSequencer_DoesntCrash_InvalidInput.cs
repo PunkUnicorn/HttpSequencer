@@ -18,7 +18,7 @@ namespace PactTests
     /// Blocky text from:
     /// https://fsymbols.com/generators/carty/
     /// </summary>
-    public class HttpSequencer_DoesntCrash_InvalidInput
+    public class HttpSequencer_InvalidInput_DoesntCrash
     {
         private readonly PortAllocationFixture mrPorty = new PortAllocationFixture(2000);
         public Func<int> GetAvailablePort => mrPorty.GetAvailablePort;
@@ -30,8 +30,8 @@ namespace PactTests
             var testOptions = new Options();
 
             /* Act */
-            var consumer = new HttpSequencer.HttpSequencer();
-            var result = consumer.RunSequence(testOptions);
+            var provider = new HttpSequencer.HttpSequencer();
+            var result = provider.RunSequence(testOptions);
 
             /* Assert */
             Assert.Equal(2, result);
@@ -59,8 +59,8 @@ namespace PactTests
             var testOptions = new Options { YamlDirect = testYamlSequence };
 
             /* Act */
-            var consumer = new HttpSequencer.HttpSequencer();
-            var result = consumer.RunSequence(testOptions);
+            var provider = new HttpSequencer.HttpSequencer();
+            var result = provider.RunSequence(testOptions);
 
             /* Assert */
             Assert.Equal(1, result);
@@ -117,7 +117,7 @@ namespace PactTests
                             {
                                 header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
                                 http_method = "GET",
-                                url = "http://doesnt-even-exist-7djemd/totally-invalid-url/{{previous_response.Id}}"
+                                url = "http://doesnt-even-exist-7djemd/totally-invalid-url/{{model.Id}}"
                             }
                         }
                     }
@@ -126,8 +126,8 @@ namespace PactTests
                 var testOptions = new Options { YamlDirect = testYamlSequence };
 
                 /* 🅰🅲🆃 */
-                var consumer = new HttpSequencer.HttpSequencer();
-                var result = consumer.RunSequence(testOptions);
+                var provider = new HttpSequencer.HttpSequencer();
+                var result = provider.RunSequence(testOptions);
 
                 /* 🅰🆂🆂🅴🆁🆃 */
                 Assert.Equal(1, result);
@@ -201,8 +201,8 @@ sequence_items:
                 var testOptions = new Options { YamlFile = t.Filename };
 
                 /* 𝓐𝓬𝓽 */
-                var consumer = new HttpSequencer.HttpSequencer();
-                var result = consumer.RunSequence(testOptions);
+                var provider = new HttpSequencer.HttpSequencer();
+                var result = provider.RunSequence(testOptions);
 
                 /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
                 Assert.Equal(2, result);

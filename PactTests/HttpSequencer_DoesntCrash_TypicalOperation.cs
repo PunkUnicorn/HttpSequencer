@@ -17,428 +17,365 @@ namespace PactTests
     /// Blocky text from:
     /// https://fsymbols.com/generators/carty/
     /// </summary>
-    //[Collection("PortAllocationCollection")]
-    public class HttpSequencer_DoesntCrash_TypicalOperation
+    public class HttpSequencer_TypicalOperation_DoesntCrash
     {
         private readonly PortAllocationFixture mrPorty = new PortAllocationFixture(1000);
 
         public Func<int> GetAvailablePort => mrPorty.GetAvailablePort;
 
-        public HttpSequencer_DoesntCrash_TypicalOperation()
+        public ConsumeHttpSequencerPact ConsumeTestYamlPact { get; }
+        public int Port { get; }
+
+        public HttpSequencer_TypicalOperation_DoesntCrash()
         {
+            Port = GetAvailablePort();
+            ConsumeTestYamlPact = new ConsumeHttpSequencerPact("TestConsumer", Port);
+            ConsumeTestYamlPact.MockProviderService.ClearInteractions();
         }
-        // Fails with no yaml
-
-        // Fails with invalid url
-
-        // Fails with second invalid url
-
-        // Fails with check fail
-
-        // load yaml smoke test
-
 
         [Fact]
         public void OneSequence()
         {
-            var testPort = GetAvailablePort();// 7878;
+            /*     _                                                 
+                  / \     _ __   _ __    __ _   _ __     __ _    ___ 
+                 / _ \   | '__| | '__|  / _` | | '_ \   / _` |  / _ \
+                / ___ \  | |    | |    | (_| | | | | | | (_| | |  __/
+               /_/   \_\ |_|    |_|     \__,_| |_| |_|  \__, |  \___|
+                                                        |___/           */
 
-            using (var ConsumeTestYaml1Pact = new ConsumeHttpSequencerPact("TestConsumer", testPort))
-            {
-                ConsumeTestYaml1Pact.MockProviderService.ClearInteractions();
-
-                /*     _                                                 
-                      / \     _ __   _ __    __ _   _ __     __ _    ___ 
-                     / _ \   | '__| | '__|  / _` | | '_ \   / _` |  / _ \
-                    / ___ \  | |    | |    | (_| | | | | | | (_| | |  __/
-                   /_/   \_\ |_|    |_|     \__,_| |_| |_|  \__, |  \___|
-                                                            |___/           */
-
-                ConsumeTestYaml1Pact.MockProviderService
-                    .Given("There is an active endpoint")
-                    .UponReceiving("A GET request to the endpoint")
-                    .With(new ProviderServiceRequest
-                    {
-                        Method = HttpVerb.Get,
-                        Path = "/",
-                        Headers = new Dictionary<string, object> { { "Accept", "text/plain" } },
-                    })
-                    .WillRespondWith(new ProviderServiceResponse
-                    {
-                        Status = 200,
-                        Headers = new Dictionary<string, object> { { "Content-Type", "text/plain" } },
-                        Body = ""
-                    });
-
-                /*
-                 * One sequence, the simplest GET with no params
-                 */
-                var testYamlSequence = new YamlOptions
+            ConsumeTestYamlPact.MockProviderService
+                .Given("There is an active endpoint")
+                .UponReceiving("A GET request to the endpoint")
+                .With(new ProviderServiceRequest
                 {
-                    sequence_items = new List<SequenceItem> {
-                        new SequenceItem
+                    Method = HttpVerb.Get,
+                    Path = "/",
+                    Headers = new Dictionary<string, object> { { "Accept", "text/plain" } },
+                })
+                .WillRespondWith(new ProviderServiceResponse
+                {
+                    Status = 200,
+                    Headers = new Dictionary<string, object> { { "Content-Type", "text/plain" } },
+                    Body = ""
+                });
+
+            /*
+            * One sequence, the simplest GET with no params
+            */
+            var testYamlSequence = new YamlOptions
+            {
+                sequence_items = new List<SequenceItem> {
+                    new SequenceItem
+                    {
+                        command = "first-and-only",
+                        send = new UrlRequest
                         {
-                            command = "first-and-only",
-                            send = new UrlRequest
-                            {
-                                http_method = "GET",
-                                url = $"http://localhost:{testPort}"
-                            }
+                            http_method = "GET",
+                            url = $"http://localhost:{Port}"
                         }
                     }
-                };
+                }
+            };
 
-                var testOptions = new HttpSequencer.Options { YamlDirect = testYamlSequence };
-
-
-                /*     _             _   
-                      / \      ___  | |_ 
-                     / _ \    / __| | __|
-                    / ___ \  | (__  | |_ 
-                   /_/   \_\  \___|  \__|   
-                                            */
-
-                var consumer = new HttpSequencer.HttpSequencer();
-
-                var result = consumer.RunSequence(testOptions);
+            var testOptions = new Options { YamlDirect = testYamlSequence };
 
 
+            /*     _             _   
+                  / \      ___  | |_ 
+                 / _ \    / __| | __|
+                / ___ \  | (__  | |_ 
+               /_/   \_\  \___|  \__|   
+                                        */
 
-                /*     _                                _   
-                      / \     ___   ___    ___   _ __  | |_ 
-                     / _ \   / __| / __|  / _ \ | '__| | __|
-                    / ___ \  \__ \ \__ \ |  __/ | |    | |_ 
-                   /_/   \_\ |___/ |___/  \___| |_|     \__|    
+            var consumer = new HttpSequencer.HttpSequencer();
+
+            var result = consumer.RunSequence(testOptions);
+
+
+
+            /*     _                                _   
+                  / \     ___   ___    ___   _ __  | |_ 
+                 / _ \   / __| / __|  / _ \ | '__| | __|
+                / ___ \  \__ \ \__ \ |  __/ | |    | |_ 
+               /_/   \_\ |___/ |___/  \___| |_|     \__|    
                                                                 */
 
-                Assert.Equal(0, result);
+            Assert.Equal(0, result);
 
-                ConsumeTestYaml1Pact.MockProviderService.VerifyInteractions();
-            }
+            ConsumeTestYamlPact.MockProviderService.VerifyInteractions();
         }
 
         [Fact]
         public void TwoSequences()
         {
-            int firstTestPort = GetAvailablePort(); //7879;
-            int secondTestPort = GetAvailablePort(); //7880;
+            /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮 */
 
-            using (var ConsumeTestYamlPact_First = new ConsumeHttpSequencerPact("FirstConsumer", firstTestPort)) 
-            using (var ConsumeTestYamlPact_Second = new ConsumeHttpSequencerPact("SecondConsumer", secondTestPort))
-            {
-                ConsumeTestYamlPact_First.MockProviderService.ClearInteractions(); 
-                ConsumeTestYamlPact_Second.MockProviderService.ClearInteractions();
+            const string expectedMoreDetailString = nameof(expectedMoreDetailString);
 
-
-                /* 
-                ░█████╗░██████╗░██████╗░░█████╗░███╗░░██╗░██████╗░███████╗
-                ██╔══██╗██╔══██╗██╔══██╗██╔══██╗████╗░██║██╔════╝░██╔════╝
-                ███████║██████╔╝██████╔╝███████║██╔██╗██║██║░░██╗░█████╗░░
-                ██╔══██║██╔══██╗██╔══██╗██╔══██║██║╚████║██║░░╚██╗██╔══╝░░
-                ██║░░██║██║░░██║██║░░██║██║░░██║██║░╚███║╚██████╔╝███████╗
-                ╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚═╝╚═╝░░╚══╝░╚═════╝░╚══════╝ */
-
-                const string expectedMoreDetailString = nameof(expectedMoreDetailString);
-
-                ConsumeTestYamlPact_First.MockProviderService
-                    .Given("There is an active endpoint that provides a list of ids")
-                    .UponReceiving("A GET request to retrieve the list")
-                    .With(new ProviderServiceRequest
-                    {
-                        Method = HttpVerb.Get,
-                        Path = "/first",
-                        Headers = new Dictionary<string, object> { { "Accept", "application/json" } },
-                    })
-                    .WillRespondWith(new ProviderServiceResponse
-                    {
-                        Status = 200,
-                        Headers = new Dictionary<string, object> { { "Content-Type", "application/json; charset=utf-8" } },
-                        Body = new Dictionary<string, object> { { "Id", "00000001" } }
-                    });
-
-                ConsumeTestYamlPact_Second.MockProviderService
-                    .Given("Given there is more detail for item id 00000001")
-                    .UponReceiving("A GET request for more detail for item id 00000001")
-                    .With(new ProviderServiceRequest
-                    {
-                        Method = HttpVerb.Get,
-                        Path = "/second/00000001",
-                        Headers = new Dictionary<string, object> { { "Accept", "application/json" } },
-                        Body = { }
-                    })
-                    .WillRespondWith(new ProviderServiceResponse
-                    {
-                        Status = 200,
-                        Headers = new Dictionary<string, object> { { "Content-Type", "application/json; charset=utf-8" } },
-                        Body = new { detail = expectedMoreDetailString }
-                    });
-
-                var testYamlSequence = new YamlOptions
+            ConsumeTestYamlPact.MockProviderService
+                .Given("There is an active endpoint that provides a list of ids")
+                .UponReceiving("A GET request to retrieve the list")
+                .With(new ProviderServiceRequest
                 {
-                    sequence_items = new List<SequenceItem> {
-                        /* First */
-                        new SequenceItem
+                    Method = HttpVerb.Get,
+                    Path = "/first",
+                    Headers = new Dictionary<string, object> { { "Accept", "application/json" } },
+                })
+                .WillRespondWith(new ProviderServiceResponse
+                {
+                    Status = 200,
+                    Headers = new Dictionary<string, object> { { "Content-Type", "application/json; charset=utf-8" } },
+                    Body = new List<object> { new { Id = "00000001" } }
+                });
+
+            ConsumeTestYamlPact.MockProviderService
+                .Given("Given there is more detail for item id 00000001")
+                .UponReceiving("A GET request for more detail for item id 00000001")
+                .With(new ProviderServiceRequest
+                {
+                    Method = HttpVerb.Get,
+                    Path = "/second/00000001",
+                    Headers = new Dictionary<string, object> { { "Accept", "application/json" } },
+                    Body = { }
+                })
+                .WillRespondWith(new ProviderServiceResponse
+                {
+                    Status = 200,
+                    Headers = new Dictionary<string, object> { { "Content-Type", "application/json; charset=utf-8" } },
+                    Body = new { detail = expectedMoreDetailString }
+                });
+
+            var testYamlSequence = new YamlOptions
+            {
+                sequence_items = new List<SequenceItem> {
+                    /* First */
+                    new SequenceItem
+                    {
+                        command = "one-of-two",
+                        send = new UrlRequest
                         {
-                            command = "one-of-two",
-                            send = new UrlRequest
-                            {
-                                header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
-                                http_method = "GET",
-                                url = $"http://localhost:{firstTestPort}/first"
-                            }
-                        },
-                        /* Second */
-                        new SequenceItem
+                            header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
+                            http_method = "GET",
+                            url = $"http://localhost:{Port}/first"
+                        }
+                    },
+                    /* Second */
+                    new SequenceItem
+                    {
+                        command = "two-of-two",
+                        is_model_array = true,
+                        send = new UrlRequest
                         {
-                            command = "two-of-two",
-                            send = new UrlRequest
-                            {
-                                header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
-                                http_method = "GET",
-                                url = $"http://localhost:{secondTestPort}/second/" + "{{previous_response.Id}}"
-                            }
+                            header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
+                            http_method = "GET",
+                            url = $"http://localhost:{Port}/second/" + "{{model.Id}}"
                         }
                     }
-                };
+                }
+            };
 
-                var testOptions = new HttpSequencer.Options { YamlDirect = testYamlSequence };
-
-
-                /*
-                ░█████╗░░█████╗░████████╗
-                ██╔══██╗██╔══██╗╚══██╔══╝
-                ███████║██║░░╚═╝░░░██║░░░
-                ██╔══██║██║░░██╗░░░██║░░░
-                ██║░░██║╚█████╔╝░░░██║░░░
-                ╚═╝░░╚═╝░╚════╝░░░░╚═╝░░░ */
-
-                var consumer = new HttpSequencer.HttpSequencer();
-                var result = consumer.RunSequence(testOptions);
+            var testOptions = new Options { YamlDirect = testYamlSequence };
 
 
-                /*
-                ░█████╗░░██████╗░██████╗███████╗██████╗░████████╗
-                ██╔══██╗██╔════╝██╔════╝██╔════╝██╔══██╗╚══██╔══╝
-                ███████║╚█████╗░╚█████╗░█████╗░░██████╔╝░░░██║░░░
-                ██╔══██║░╚═══██╗░╚═══██╗██╔══╝░░██╔══██╗░░░██║░░░
-                ██║░░██║██████╔╝██████╔╝███████╗██║░░██║░░░██║░░░
-                ╚═╝░░╚═╝╚═════╝░╚═════╝░╚══════╝╚═╝░░╚═╝░░░╚═╝░░░ */
+            /* 𝓐𝓬𝓽 */
 
-                Assert.Equal(0, result);
+            var consumer = new HttpSequencer.HttpSequencer();
+            var result = consumer.RunSequence(testOptions);
 
-                ConsumeTestYamlPact_First.MockProviderService.VerifyInteractions();
-                ConsumeTestYamlPact_Second.MockProviderService.VerifyInteractions(); 
-            }
+
+            /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
+
+            Assert.Equal(0, result);
+
+            ConsumeTestYamlPact.MockProviderService.VerifyInteractions();
         }
 
         [Fact]
         public void ThreeSequences_CheckPasses()
         {
-            int firstTestPort = GetAvailablePort(); //7883;
-            int secondTestPort = GetAvailablePort(); //7884;
+            /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮 */
 
-            using (var ConsumeTestYamlPact_First = new ConsumeHttpSequencerPact("FirstConsumer", firstTestPort))
-            using (var ConsumeTestYamlPact_Second = new ConsumeHttpSequencerPact("SecondConsumer", secondTestPort))
-            {
-                ConsumeTestYamlPact_First.MockProviderService.ClearInteractions();
-                ConsumeTestYamlPact_Second.MockProviderService.ClearInteractions();
+            const string expectedMoreDetailString = nameof(expectedMoreDetailString);
 
-
-                /* 🅰🆁🆁🅰🅽🅶🅴  */
-
-                const string expectedMoreDetailString = nameof(expectedMoreDetailString);
-
-                ConsumeTestYamlPact_First.MockProviderService
-                    .Given("There is an active endpoint that provides a list of ids")
-                    .UponReceiving("A GET request to retrieve the list")
-                    .With(new ProviderServiceRequest
-                    {
-                        Method = HttpVerb.Get,
-                        Path = "/first",
-                        Headers = new Dictionary<string, object> { { "Accept", "application/json" } },
-                    })
-                    .WillRespondWith(new ProviderServiceResponse
-                    {
-                        Status = 200,
-                        Headers = new Dictionary<string, object> { { "Content-Type", "application/json; charset=utf-8" } },
-                        Body = new Dictionary<string, object> { { "Id", "00000001" } }
-                    });
-
-                ConsumeTestYamlPact_Second.MockProviderService
-                    .Given("Given there is more detail for item id 00000001")
-                    .UponReceiving("A GET request for more detail for item id 00000001")
-                    .With(new ProviderServiceRequest
-                    {
-                        Method = HttpVerb.Get,
-                        Path = "/second/00000001",
-                        Headers = new Dictionary<string, object> { { "Accept", "application/json" } },
-                        Body = { }
-                    })
-                    .WillRespondWith(new ProviderServiceResponse
-                    {
-                        Status = 200,
-                        Headers = new Dictionary<string, object> { { "Content-Type", "application/json; charset=utf-8" } },
-                        Body = new { detail = expectedMoreDetailString }
-                    });
-
-                var testYamlSequence = new YamlOptions
+            ConsumeTestYamlPact.MockProviderService
+                .Given("There is an active endpoint that provides a list of one id")
+                .UponReceiving("A GET request to retrieve the list of one id")
+                .With(new ProviderServiceRequest
                 {
-                    sequence_items = new List<SequenceItem> {
-                        /* First */
-                        new SequenceItem
+                    Method = HttpVerb.Get,
+                    Path = "/first",
+                    Headers = new Dictionary<string, object> { { "Accept", "application/json" } },
+                })
+                .WillRespondWith(new ProviderServiceResponse
+                {
+                    Status = 200,
+                    Headers = new Dictionary<string, object> { { "Content-Type", "application/json; charset=utf-8" } },
+                    Body = new List<object> { new { Id = "00000001" } }
+                });
+
+            ConsumeTestYamlPact.MockProviderService
+                .Given("Given there is more detail for item id 00000001")
+                .UponReceiving("A GET request for more detail for item id 00000001")
+                .With(new ProviderServiceRequest
+                {
+                    Method = HttpVerb.Get,
+                    Path = "/second/00000001",
+                    Headers = new Dictionary<string, object> { { "Accept", "application/json" } },
+                    Body = { }
+                })
+                .WillRespondWith(new ProviderServiceResponse
+                {
+                    Status = 200,
+                    Headers = new Dictionary<string, object> { { "Content-Type", "application/json; charset=utf-8" } },
+                    Body = new { detail = expectedMoreDetailString }
+                });
+
+            var testYamlSequence = new YamlOptions
+            {
+                sequence_items = new List<SequenceItem> {
+                    /* First */
+                    new SequenceItem
+                    {
+                        command = "one-of-three",
+                        send = new UrlRequest
                         {
-                            command = "one-of-two",
-                            send = new UrlRequest
-                            {
-                                header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
-                                http_method = "GET",
-                                url = $"http://localhost:{firstTestPort}/first"
-                            }
-                        },
-                        /* Second */
-                        new SequenceItem
+                            header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
+                            http_method = "GET",
+                            url = $"http://localhost:{Port}/first"
+                        }
+                    },
+                    /* Second */
+                    new SequenceItem
+                    {
+                        command = "two-of-three",
+                        is_model_array = true,
+                        send = new UrlRequest
                         {
-                            command = "two-of-two",
-                            send = new UrlRequest
-                            {
-                                header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
-                                http_method = "GET",
-                                url = $"http://localhost:{secondTestPort}/second/" + "{{previous_response.Id}}"
-                            }
-                        },
-                        /* Check */
-                        new SequenceItem
+                            header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
+                            http_method = "GET",
+                            url = $"http://localhost:{Port}/second/" + "{{model.Id}}"
+                        }
+                    },
+                    /* Check */
+                    new SequenceItem
+                    {
+                        command = "three-of-three",
+                        check = new SequenceCheck
                         {
-                            command = "check",
-                            check = new SequenceCheck
-                            {
-                                pass_template = "{{if previous_response.detail=='expectedMoreDetailString'}}true{{else}}false{{end}}"
-                            }
+                            pass_template = "{{if model.detail=='expectedMoreDetailString'}}true{{else}}false{{end}}"
                         }
                     }
-                };
+                }
+            };
 
-                var testOptions = new HttpSequencer.Options { YamlDirect = testYamlSequence };
-
-
-                /* 🅰🅲🆃 */
-
-                var consumer = new HttpSequencer.HttpSequencer();
-                var result = consumer.RunSequence(testOptions);
+            var testOptions = new Options { YamlDirect = testYamlSequence };
 
 
-                /* 🅰🆂🆂🅴🆁🆃 */
+            /* 𝓐𝓬𝓽 */
 
-                Assert.Equal(0, result);
+            var provider = new HttpSequencer.HttpSequencer();
+            var result = provider.RunSequence(testOptions);
 
-                ConsumeTestYamlPact_First.MockProviderService.VerifyInteractions();
-                ConsumeTestYamlPact_Second.MockProviderService.VerifyInteractions();
-            }
+
+            /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
+
+            Assert.Equal(0, result);
+
+            ConsumeTestYamlPact.MockProviderService.VerifyInteractions();
         }
 
         [Fact]
         public void ThreeSequences_CheckFails()
         {
-            int firstTestPort = GetAvailablePort();
-            int secondTestPort = GetAvailablePort();
+            /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮 */
 
-            using (var ConsumeTestYamlPact_First = new ConsumeHttpSequencerPact("FirstConsumer", firstTestPort))
-            using (var ConsumeTestYamlPact_Second = new ConsumeHttpSequencerPact("SecondConsumer", secondTestPort))
-            {
-                ConsumeTestYamlPact_First.MockProviderService.ClearInteractions();
-                ConsumeTestYamlPact_Second.MockProviderService.ClearInteractions();
+            const string expectedMoreDetailString = nameof(expectedMoreDetailString);
 
-
-                /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮 */
-
-                const string expectedMoreDetailString = nameof(expectedMoreDetailString);
-
-                ConsumeTestYamlPact_First.MockProviderService
-                    .Given("There is an active endpoint that provides a list of ids")
-                    .UponReceiving("A GET request to retrieve the list")
-                    .With(new ProviderServiceRequest
-                    {
-                        Method = HttpVerb.Get,
-                        Path = "/first",
-                        Headers = new Dictionary<string, object> { { "Accept", "application/json" } },
-                    })
-                    .WillRespondWith(new ProviderServiceResponse
-                    {
-                        Status = 200,
-                        Headers = new Dictionary<string, object> { { "Content-Type", "application/json; charset=utf-8" } },
-                        Body = new Dictionary<string, object> { { "Id", "00000001" } }
-                    });
-
-                ConsumeTestYamlPact_Second.MockProviderService
-                    .Given("Given there is more detail for item id 00000001")
-                    .UponReceiving("A GET request for more detail for item id 00000001")
-                    .With(new ProviderServiceRequest
-                    {
-                        Method = HttpVerb.Get,
-                        Path = "/second/00000001",
-                        Headers = new Dictionary<string, object> { { "Accept", "application/json" } },
-                        Body = { }
-                    })
-                    .WillRespondWith(new ProviderServiceResponse
-                    {
-                        Status = 200,
-                        Headers = new Dictionary<string, object> { { "Content-Type", "application/json; charset=utf-8" } },
-                        Body = new { detail = expectedMoreDetailString }
-                    });
-
-                var testYamlSequence = new YamlOptions
+            ConsumeTestYamlPact.MockProviderService
+                .Given("There is an active endpoint that provides a list of ids")
+                .UponReceiving("A GET request to retrieve the list")
+                .With(new ProviderServiceRequest
                 {
-                    sequence_items = new List<SequenceItem> {
-                        /* First */
-                        new SequenceItem
+                    Method = HttpVerb.Get,
+                    Path = "/first",
+                    Headers = new Dictionary<string, object> { { "Accept", "application/json" } },
+                })
+                .WillRespondWith(new ProviderServiceResponse
+                {
+                    Status = 200,
+                    Headers = new Dictionary<string, object> { { "Content-Type", "application/json; charset=utf-8" } },
+                    Body = new List<object> { new { Id = "00000001" } }
+                });
+
+            ConsumeTestYamlPact.MockProviderService
+                .Given("Given there is more detail for item id 00000001")
+                .UponReceiving("A GET request for more detail for item id 00000001")
+                .With(new ProviderServiceRequest
+                {
+                    Method = HttpVerb.Get,
+                    Path = "/second/00000001",
+                    Headers = new Dictionary<string, object> { { "Accept", "application/json" } },
+                    Body = { }
+                })
+                .WillRespondWith(new ProviderServiceResponse
+                {
+                    Status = 200,
+                    Headers = new Dictionary<string, object> { { "Content-Type", "application/json; charset=utf-8" } },
+                    Body = new { detail = expectedMoreDetailString }
+                });
+
+            var testYamlSequence = new YamlOptions
+            {
+                sequence_items = new List<SequenceItem> {
+                    /* First */
+                    new SequenceItem
+                    {
+                        command = "one-of-three",
+                        send = new UrlRequest
                         {
-                            command = "one-of-two",
-                            send = new UrlRequest
-                            {
-                                header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
-                                http_method = "GET",
-                                url = $"http://localhost:{firstTestPort}/first"
-                            }
-                        },
-                        /* Second */
-                        new SequenceItem
+                            header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
+                            http_method = "GET",
+                            url = $"http://localhost:{Port}/first"
+                        }
+                    },
+                    /* Second */
+                    new SequenceItem
+                    {
+                        command = "two-of-three",
+                        is_model_array = true,
+                        send = new UrlRequest
                         {
-                            command = "two-of-two",
-                            send = new UrlRequest
-                            {
-                                header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
-                                http_method = "GET",
-                                url = $"http://localhost:{secondTestPort}/second/" + "{{previous_response.Id}}"
-                            }
-                        },
-                        /* Check */
-                        new SequenceItem
+                            header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
+                            http_method = "GET",
+                            url = $"http://localhost:{Port}/second/" + "{{model.Id}}"
+                        }
+                    },
+                    /* Check */
+                    new SequenceItem
+                    {
+                        command = "three-of-three",
+                        check = new SequenceCheck
                         {
-                            command = "check",
-                            check = new SequenceCheck
-                            {
-                                pass_template = "{{if previous_response.detail=='it will never be this'}}true{{else}}false{{end}}"
-                            }
+                            pass_template = "{{if model.detail=='it will never be this'}}true{{else}}false{{end}}"
                         }
                     }
-                };
+                }
+            };
 
-                var testOptions = new HttpSequencer.Options { YamlDirect = testYamlSequence };
-
-
-                /* 𝓐𝓬𝓽 */
-
-                var consumer = new HttpSequencer.HttpSequencer();
-                var result = consumer.RunSequence(testOptions);
+            var testOptions = new Options { YamlDirect = testYamlSequence };
 
 
-                /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
+            /* 𝓐𝓬𝓽 */
 
-                Assert.Equal(1, result);
+            var provider = new HttpSequencer.HttpSequencer();
+            var result = provider.RunSequence(testOptions);
 
-                ConsumeTestYamlPact_First.MockProviderService.VerifyInteractions();
-                ConsumeTestYamlPact_Second.MockProviderService.VerifyInteractions();
-            }
+
+            /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
+
+            Assert.Equal(1, result);
+
+            ConsumeTestYamlPact.MockProviderService.VerifyInteractions();
         }
     }
 }

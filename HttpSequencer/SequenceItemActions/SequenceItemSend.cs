@@ -73,7 +73,7 @@ namespace HttpSequencer.SequenceItemActions
                 {
                     run_id = this.state.RunId,
                     command_args = this.state.CommandLineOptions,
-                    previous_response = this.model,
+                    this.model,
                     sequence_item = this.sequenceItem
                 };
                 this.WorkingUri = ScribanUtil.ScribanParse(this.sequenceItem.send.url, scribanModel);
@@ -249,7 +249,7 @@ namespace HttpSequencer.SequenceItemActions
             const int defaultClientTimeoutSeconds = 90;
             client.Timeout = TimeSpan.FromSeconds(yaml.client_timeout_seconds ?? defaultClientTimeoutSeconds);
 
-            var scribanModel = new { yaml.run_id, command_args = o, previous_response = new { } };
+            var scribanModel = new { yaml.run_id, command_args = o, model = new { } };
             client.DefaultRequestHeaders.Accept.Clear();
             if (entry?.send?.header != null)
             {

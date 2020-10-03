@@ -83,7 +83,7 @@ namespace HttpSequencer
                 {
                     run_id = this.state.RunId,
                     command_args = this.state.CommandLineOptions,
-                    previous_response = this.model,
+                    this.model,
                     sequence_item = this.sequenceItem
                 };
 

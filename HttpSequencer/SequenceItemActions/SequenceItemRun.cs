@@ -65,7 +65,7 @@ namespace HttpSequencer.SequenceItemActions
 
 				this.state.Log.Info($"Running {this.sequenceItem.run.exec}...");
 
-				var scribanModel = new { run_id = this.state.RunId, command_args = this.state.CommandLineOptions, previous_response = this.model, sequence_item = this.sequenceItem };
+				var scribanModel = new { run_id = this.state.RunId, command_args = this.state.CommandLineOptions, this.model, sequence_item = this.sequenceItem };
 
 				// Exec run external program
 				var workingExec = ScribanUtil.ScribanParse(this.sequenceItem?.run?.exec ?? "", scribanModel);
@@ -88,7 +88,7 @@ namespace HttpSequencer.SequenceItemActions
 		}
 
 		/// <summary>
-		/// Execute an external program. It gets the previous_response through stdin, and gives its output through stdout, and errors through stderr
+		/// Execute an external program. It gets the model through stdin, and gives its output through stdout, and errors through stderr
 		/// </summary>
 		/// <param name="run">The yaml run: block</param>
 		/// <param name="workingExec">Name of the executable to run</param>
