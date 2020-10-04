@@ -1,11 +1,12 @@
 ﻿using HttpSequencer;
 using PactNet.Mocks.MockHttpService.Models;
+using PactTests;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using Xunit;
 
-namespace PactTests
+namespace PactTests_Blackbox
 {
     /// <summary>
     /// Big text from:
@@ -29,7 +30,8 @@ namespace PactTests
         public HttpSequencer_TypicalOperation_DoesntCrash()
         {
             Port = GetAvailablePort();
-            ConsumeTestYamlPact = new ConsumeHttpSequencerPact("TestConsumer", Port);
+            var consumerName = $"{nameof(HttpSequencer_TypicalOperation_DoesntCrash)}Consumer";
+            ConsumeTestYamlPact = new ConsumeHttpSequencerPact(consumerName, Port);
             ConsumeTestYamlPact.MockProviderService.ClearInteractions();
         }
 
@@ -279,9 +281,9 @@ namespace PactTests
 
             /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
 
-            Assert.Equal(0, result);
-
             ConsumeTestYamlPact.MockProviderService.VerifyInteractions();
+
+            Assert.Equal(0, result);
         }
 
         [Fact]

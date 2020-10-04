@@ -1,12 +1,13 @@
 ﻿using HttpSequencer;
 using NLog.LayoutRenderers;
 using PactNet.Mocks.MockHttpService.Models;
+using PactTests;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using Xunit;
 
-namespace PactTests
+namespace PactTests_Blackbox
 {
     /// <summary>
     /// Big text from:

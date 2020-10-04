@@ -78,19 +78,20 @@ namespace HttpSequencer.SequenceItemActions
                 };
                 this.WorkingUri = ScribanUtil.ScribanParse(this.sequenceItem.send.url, scribanModel);
 
-                this.state.Log.Info($"Processing {this.WorkingUri}...");
+                this.state.Log?.Info($"Processing {this.WorkingUri}...");
 
                 dynamic responseModel = null;
                 using (var client = MakeClientWithHeaders(this.state.CommandLineOptions, this.state.YamlOptions, this.sequenceItem))
                 {
                     var http_response = await DoSendAction(client, scribanModel);
+                    this.IsFail = !http_response.IsSuccessStatusCode;
 
                     var responseContentLength = http_response?.Content?.Headers?.ContentLength ?? 0;
                     var responseContent = responseContentLength > 0
                         ? (await http_response?.Content?.ReadAsStringAsync())
                         : string.Empty;
 
-                    this.state.ProgressLog.Progress($" received {responseContentLength} bytes...");
+                    this.state.ProgressLog?.Progress($" received {responseContentLength} bytes...");
                     responseModel = SequenceItemStatic.GetResponseItems(this.state, this.sequenceItem, responseContent);
 
                     SavingContentsEtc(Guid.NewGuid().ToString(), responseModel, http_response, responseContentLength, responseContent);
@@ -102,7 +103,7 @@ namespace HttpSequencer.SequenceItemActions
 
         private async Task<HttpResponseMessage> DoSendAction(HttpClient client, object scribanModel)
         {
-            this.state.Log.Info($" using method '{this.sequenceItem.send.http_method}'...");
+            this.state.Log?.Info($" using method '{this.sequenceItem.send.http_method}'...");
 
             if (this.sequenceItem.send.query != null)
                 WorkingUri = AppendSendActionQuery(this.WorkingUri, scribanModel);
@@ -110,17 +111,17 @@ namespace HttpSequencer.SequenceItemActions
             if (this.sequenceItem.send?.body != null)
             {
                 this.WorkingBody = ScribanUtil.ScribanParse(this.sequenceItem.send.body, scribanModel);
-                this.state.Log.Info($" using content body '{this.WorkingBody}'...");
+                this.state.Log?.Info($" using content body '{this.WorkingBody}'...");
 
                 if (this.sequenceItem.send.save_body_filename != null)
                     SaveSendActionBody(scribanModel, WorkingBody);
             }
 
-            this.state.Log.Info($" using url '{this.WorkingUri}'...");
+            this.state.Log?.Info($" using url '{this.WorkingUri}'...");
 
             // Process the response content
             var contenType = this.sequenceItem.send.content_type ?? "text/plain";
-            return await SortOutHttpMethodAndReturnResult(this.sequenceItem.max_retrys, client, this.sequenceItem.send.http_method, contenType, WorkingBody);
+            return await SortOutHttpMethodAndReturnResult(this.sequenceItem.max_instant_retrys, client, this.sequenceItem.send.http_method, contenType, WorkingBody);
         }
 
         private string AppendSendActionQuery(string workingUri, object scribanModel)
@@ -157,7 +158,7 @@ namespace HttpSequencer.SequenceItemActions
             if (contentSaveName.Trim().Length > 0)
             {
                 var contentFn = Path.Combine(saveTo, ScribanUtil.ScribanParse(contentSaveName, saveModel));
-                this.state.Log.Info($" saving content to '{contentFn }'...");
+                this.state.Log?.Info($" saving content to '{contentFn }'...");
 
                 Directory.CreateDirectory(Path.GetDirectoryName(contentFn));
 
@@ -173,7 +174,7 @@ namespace HttpSequencer.SequenceItemActions
             if (httpResponse != null && responseSaveName.Trim().Length > 0)
             {
                 var nonContentFn = Path.Combine(saveTo, ScribanUtil.ScribanParse(responseSaveName, saveModel));
-                this.state.Log.Info($" saving non content response to '{nonContentFn}'...");
+                this.state.Log?.Info($" saving non content response to '{nonContentFn}'...");
 
                 var nonContent = new
                 {
@@ -191,7 +192,7 @@ namespace HttpSequencer.SequenceItemActions
             }
         }
 
-        private async Task<HttpResponseMessage> SortOutHttpMethodAndReturnResult(int? retryCount, HttpClient client, string method, string mediaType, string workingBody)
+        private async Task<HttpResponseMessage> SortOutHttpMethodAndReturnResult(int? instantRetryCount, HttpClient client, string method, string mediaType, string workingBody)
         {
             try
             {
@@ -199,7 +200,7 @@ namespace HttpSequencer.SequenceItemActions
 
                 var policy = Policy
                   .Handle<Exception>()
-                  .Retry(retryCount ?? 1);
+                  .Retry(instantRetryCount ?? 1);
 
                 var ret = policy.Execute<Task<HttpResponseMessage>>(async () => 
                 { 

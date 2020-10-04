@@ -1,12 +1,11 @@
 ﻿using HttpSequencer;
 using PactNet.Mocks.MockHttpService.Models;
+using PactTests;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Xunit;
-using Xunit.Sdk;
 
-namespace PactTests
+namespace PactTests_Blackbox
 {
     public class HttpSequencer_TypicalOperation_FansOut
     {
@@ -20,7 +19,8 @@ namespace PactTests
         public HttpSequencer_TypicalOperation_FansOut()
         {
             Port = GetAvailablePort();
-            ConsumeTestYamlPact = new ConsumeHttpSequencerPact("FirstConsumer", Port);
+            var consumerName = $"{nameof(HttpSequencer_TypicalOperation_FansOut)}Consumer";
+            ConsumeTestYamlPact = new ConsumeHttpSequencerPact(consumerName, Port);
             ConsumeTestYamlPact.MockProviderService.ClearInteractions();
         }
 
@@ -57,46 +57,6 @@ namespace PactTests
             };
         }
 
-        private static void BuildSuccessConsumerForId(ConsumeHttpSequencerPact consumer, string id)
-        {
-            consumer.MockProviderService
-                .Given($"Given there is more detail for item id {id}")
-                .UponReceiving($"A GET request for more detail for item id {id}")
-                .With(new ProviderServiceRequest
-                {
-                    Method = HttpVerb.Get,
-                    Path = $"/second/{id}",
-                    Headers = new Dictionary<string, object> { { "Accept", "application/json" } },
-                    Body = { }
-                })
-                .WillRespondWith(new ProviderServiceResponse
-                {
-                    Status = 200,
-                    Headers = new Dictionary<string, object> { { "Content-Type", "application/json; charset=utf-8" } },
-                    Body = new { detail = $"More detail for id {id}" }
-                });
-        }
-
-        private static void BuildFailConsumerForId(ConsumeHttpSequencerPact consumer, string id)
-        {
-            consumer.MockProviderService
-                .Given($"Given there is more detail for item id {id}")
-                .UponReceiving($"A GET request for more detail for item id {id}")
-                .With(new ProviderServiceRequest
-                {
-                    Method = HttpVerb.Get,
-                    Path = $"/second/{id}",
-                    Headers = new Dictionary<string, object> { { "Accept", "application/json" } },
-                    Body = { }
-                })
-                .WillRespondWith(new ProviderServiceResponse
-                {
-                    Status = 410,
-                    Headers = new Dictionary<string, object> { { "Content-Type", "text/html" } },
-                    Body = "<html><body>"
-                });
-        }
-
         [Fact]
         public void FansOutThree_ExpectedSuccess()
         {
@@ -122,11 +82,11 @@ namespace PactTests
                     }
                 });
 
-            BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000001");
-            BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000002");
-            BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000003");          
+            SharedPactScafolding.BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000001");
+            SharedPactScafolding.BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000002");
+            SharedPactScafolding.BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000003");          
 
-            var testOptions = new HttpSequencer.Options { YamlDirect = MakeYamlSequence(Port) };
+            var testOptions = new Options { YamlDirect = MakeYamlSequence(Port) };
 
 
             /* 𝓐𝓬𝓽 */
@@ -167,11 +127,11 @@ namespace PactTests
                     }
                 });
 
-            BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000001");
-            BuildFailConsumerForId(ConsumeTestYamlPact, "00000002");
-            BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000003");
+            SharedPactScafolding.BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000001");
+            SharedPactScafolding.BuildFailConsumerForId(ConsumeTestYamlPact, "00000002");
+            SharedPactScafolding.BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000003");
 
-            var testOptions = new HttpSequencer.Options { YamlDirect = MakeYamlSequence(Port) };
+            var testOptions = new Options { YamlDirect = MakeYamlSequence(Port) };
 
 
             /* 𝓐𝓬𝓽 */
@@ -182,7 +142,7 @@ namespace PactTests
 
             /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
 
-            Assert.Equal(0, result);
+            Assert.Equal(1, result);
 
             ConsumeTestYamlPact.MockProviderService.VerifyInteractions();
         }
@@ -191,8 +151,6 @@ namespace PactTests
         public void FansOutThree_ExpectedFailOnTwo()
         {
             /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮 */
-
-            const string expectedMoreDetailString = nameof(expectedMoreDetailString);
 
             ConsumeTestYamlPact.MockProviderService
                 .Given("There is an active endpoint that provides a list of three ids")
@@ -214,11 +172,11 @@ namespace PactTests
                     }
                 });
 
-            BuildFailConsumerForId(ConsumeTestYamlPact, "00000001");
-            BuildFailConsumerForId(ConsumeTestYamlPact, "00000002");
-            BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000003");            
+            SharedPactScafolding.BuildFailConsumerForId(ConsumeTestYamlPact, "00000001");
+            SharedPactScafolding.BuildFailConsumerForId(ConsumeTestYamlPact, "00000002");
+            SharedPactScafolding.BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000003");            
 
-            var testOptions = new HttpSequencer.Options { YamlDirect = MakeYamlSequence(Port) };
+            var testOptions = new Options { YamlDirect = MakeYamlSequence(Port) };
 
 
             /* 𝓐𝓬𝓽 */
@@ -229,28 +187,9 @@ namespace PactTests
 
             /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
 
-            Assert.Equal(0, result);
+            Assert.Equal(1, result);
 
             ConsumeTestYamlPact.MockProviderService.VerifyInteractions();
-
-        }
-
-        [Fact]
-        public void FansOutThree_ExpectedFailOnOne_ThenRetryOnce_FollwedBy_Success()
-        {
-            throw new NotImplementedException();
-        }
-
-        [Fact]
-        public void FansOutThree_ExpectedFailOnOne_ThenRetryOnce_FollwedBy_Fail()
-        {
-            throw new NotImplementedException();
-        }
-
-        [Fact]
-        public void FansOutThree_ExpectedFailOnOne_ThenRetryThreeTimes_FollwedBy_Fail()
-        {
-            throw new NotImplementedException();
         }
     }
 }

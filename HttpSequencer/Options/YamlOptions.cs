@@ -41,8 +41,15 @@ namespace HttpSequencer
 
 	public class SequenceItem
 	{
-		public string command { get; set; }
+        public string command { get; set; }
 		public UrlRequest send { get; set; }
+		/// <summary>
+		/// Number of retrys to do instantly after the fail
+		/// </summary>
+		public int? max_instant_retrys;
+		/// <summary>
+		/// Number of retrys to do after the other peer sequences are finished. This is a delayed retry
+		/// </summary>
 		public int? max_retrys { get; set;}
 		/// <summary>
 		/// Set to true to treat the model as an array, with each array item being processed individually

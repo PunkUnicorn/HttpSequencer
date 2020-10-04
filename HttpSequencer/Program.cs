@@ -14,7 +14,7 @@ using YamlExtensions;
 
 namespace HttpSequencer
 {
-    partial class Program
+    public class Program
     {        
         static Program()
         {
@@ -40,9 +40,10 @@ namespace HttpSequencer
             {
                 Console.WriteLine(e.ToString());
             }
-            return 1;
+            return 3;
         }
     }
+
     public class HttpSequencer
     {
         private static Generator Generator = new Generator("", Casing.PascalCase);
@@ -78,7 +79,7 @@ namespace HttpSequencer
                 var breadcrumbs = new Stack<ISequenceItemAction>();
 
                 // Pass in the chain of command to do after
-                var waitFor = ProcessSequenceItem(state, null, null, sequenceItem, yaml.sequence_items.Skip(1), breadcrumbs);
+                var waitFor = ProcessSequenceItemAsync(state, null, null, sequenceItem, yaml.sequence_items.Skip(1), breadcrumbs);
                 waitFor.Wait();
                 var result = waitFor.Result;
 
@@ -105,9 +106,9 @@ namespace HttpSequencer
             return candidate.Trim('-').Trim('_');
         }
 
-        private static async Task<bool> ProcessSequenceItem(RunState state, ISequenceItemAction parent, object model, SequenceItem sequenceItem, IEnumerable<SequenceItem> nextSequenceItems, Stack<ISequenceItemAction> breadcrumbs)
+        private static async Task<bool> ProcessSequenceItemAsync(RunState state, ISequenceItemAction parent, object model, SequenceItem sequenceItem, IEnumerable<SequenceItem> nextSequenceItems, Stack<ISequenceItemAction> breadcrumbs)
         {
-            state.ProgressLog.Started(sequenceItem);
+            state.ProgressLog?.Started(sequenceItem);
 
             var retryAfter = new Stack<ISequenceItemAction>();
 
@@ -117,23 +118,23 @@ namespace HttpSequencer
             {
                 var itemsRunning = new List<Task<bool>>();
                 foreach (var item in model as IEnumerable<object> ?? new object[] { })
-                    itemsRunning.Add(SequenceItemDispatcher(state, parent, item, sequenceItem, nextSequenceItems, retryAfter, breadcrumbs));
+                    itemsRunning.Add(SequenceItemDispatcherAsync(state, parent, item, sequenceItem, nextSequenceItems, retryAfter, breadcrumbs));
 
                 var allResults = await Task<bool []>.WhenAll(itemsRunning);
                 result = allResults.All(a => a);
             }
-            else result = await SequenceItemDispatcher(state, parent, model, sequenceItem, nextSequenceItems, retryAfter, breadcrumbs);
+            else result = await SequenceItemDispatcherAsync(state, parent, model, sequenceItem, nextSequenceItems, retryAfter, breadcrumbs);
 
             var cancelToken = new CancellationToken();
             var retryFailures = new Stack<ISequenceItemAction>();
             if (retryAfter.Any())
-                result = await SequenceItemRetryDispatcher(cancelToken, retryAfter, state, retryFailures, breadcrumbs);
+                result = await SequenceItemRetryDispatcherAsync(cancelToken, retryAfter, state, retryFailures, breadcrumbs);
            
 
             return result && !retryAfter.Any();
         }
 
-        private static async Task<bool> SequenceItemRetryDispatcher(CancellationToken cancelToken, IEnumerable<ISequenceItemAction> toRetry, RunState state, Stack<ISequenceItemAction> retryAfterList, Stack<ISequenceItemAction> breadcrumbs)
+        public static async Task<bool> SequenceItemRetryDispatcherAsync(CancellationToken cancelToken, IEnumerable<ISequenceItemAction> toRetry, RunState state, Stack<ISequenceItemAction> retryAfterList, Stack<ISequenceItemAction> breadcrumbs)
         {
             foreach (var sequenceItemAction in toRetry) 
             try 
@@ -147,6 +148,7 @@ namespace HttpSequencer
                 breadcrumbs.Push(sequenceItemAction);
 
                 var result = await policy.Execute( async () => await sequenceItemAction.Action(cancelToken));
+                return !sequenceItemAction.IsFail;
             }
             catch (Exception e)
             {
@@ -158,7 +160,7 @@ namespace HttpSequencer
         }
 
         // Return the result and what to do next
-        private static async Task<bool> SequenceItemDispatcher(RunState state, ISequenceItemAction parent, object model, SequenceItem sequenceItem, IEnumerable<SequenceItem> nextSequenceItems, Stack<ISequenceItemAction> retryAfterList, Stack<ISequenceItemAction> breadcrumbs)
+        private static async Task<bool> SequenceItemDispatcherAsync(RunState state, ISequenceItemAction parent, object model, SequenceItem sequenceItem, IEnumerable<SequenceItem> nextSequenceItems, Stack<ISequenceItemAction> retryAfterList, Stack<ISequenceItemAction> breadcrumbs)
         {
             // try catch in here setup the retry after list as appropriate
 
@@ -192,7 +194,7 @@ namespace HttpSequencer
                     return false;
 
                 if (nextSequenceItems.Any())
-                    return await ProcessSequenceItem(state, sequenceItemAction, result, nextSequenceItems.First(), nextSequenceItems.Skip(1), breadcrumbs);
+                    return await ProcessSequenceItemAsync(state, sequenceItemAction, result, nextSequenceItems.First(), nextSequenceItems.Skip(1), breadcrumbs);
                 else
                     return true;
             }
@@ -218,7 +220,7 @@ namespace HttpSequencer
 
             if (sequenceItem.is_abort_on_exception) return false;
 
-            if (sequenceItem.max_retrys >= sequenceItemAction.ActionExecuteCount) return false;
+            if (sequenceItem.max_retrys < sequenceItemAction.ActionExecuteCount) return false;
 
             retryAfterList.Push(sequenceItemAction);
 

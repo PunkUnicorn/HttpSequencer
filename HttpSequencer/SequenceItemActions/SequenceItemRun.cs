@@ -63,7 +63,7 @@ namespace HttpSequencer.SequenceItemActions
 				if (this.sequenceItem.run == null)
 					return null;
 
-				this.state.Log.Info($"Running {this.sequenceItem.run.exec}...");
+				this.state.Log?.Info($"Running {this.sequenceItem.run.exec}...");
 
 				var scribanModel = new { run_id = this.state.RunId, command_args = this.state.CommandLineOptions, this.model, sequence_item = this.sequenceItem };
 
@@ -71,7 +71,7 @@ namespace HttpSequencer.SequenceItemActions
 				var workingExec = ScribanUtil.ScribanParse(this.sequenceItem?.run?.exec ?? "", scribanModel);
 				var workingArgs = ScribanUtil.ScribanParse(this.sequenceItem?.run?.args ?? "", scribanModel);
 
-				this.state.ProgressLog.Progress($" running exec '{workingExec}', with args '{workingArgs}'...");
+				this.state.ProgressLog?.Progress($" running exec '{workingExec}', with args '{workingArgs}'...");
 
 				var itsStandardInput = (model != null)
 					? JsonConvert.SerializeObject(model)
@@ -146,14 +146,14 @@ namespace HttpSequencer.SequenceItemActions
 			if (errorOutputBuilder.Length > 0)
 			{
 				var errorDetail = errorOutputBuilder.ToString();
-				this.state.Log.Error(errorDetail);
+				this.state.Log?.Error(errorDetail);
 				throw new Exception(errorDetail);
 			}
 
 			if (exitCode != 0)
 			{
 				var errorMsg = $"Failed due to '{workingExec}' returning non-zero exitcode: {exitCode}";
-				this.state.Log.Error(errorMsg);
+				this.state.Log?.Error(errorMsg);
 				//this.state.ProgressLog.Fail(this.sequenceItem);
 				throw new Exception(errorMsg);
 			}

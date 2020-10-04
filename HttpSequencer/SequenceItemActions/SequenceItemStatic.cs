@@ -18,7 +18,7 @@ namespace HttpSequencer.SequenceItemActions
             try
             {
                 if (item_quantity_cap != null)
-                    state.ProgressLog.Progress($" taking the first {item_quantity_cap} results only...");
+                    state.ProgressLog?.Progress($" taking the first {item_quantity_cap} results only...");
 
                 responseModel = item_quantity_cap != null
                     ? JsonConvert.DeserializeObject<List<dynamic>>(content).Take(item_quantity_cap.Value).ToList()
