@@ -36,6 +36,55 @@ namespace PactTests_Blackbox
         }
 
         [Fact]
+        public void LoadYaml_ExpectSuccess()
+        {
+            int testPort = GetAvailablePort();
+
+            string yamlContents = $@"---
+sequence_items:
+  - command: start
+    send:
+      http_method: GET
+      url: http://localhost:{testPort}";
+
+            using (var consumeTestYamlPact = new ConsumeHttpSequencerPact("FirstConsumer", testPort))
+            using (var t = new TempFile())
+            {
+                consumeTestYamlPact.MockProviderService.ClearInteractions();
+
+                /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮 */
+                File.WriteAllText(t.Filename, yamlContents);
+
+                consumeTestYamlPact.MockProviderService
+                    .Given("There is an active endpoint")
+                    .UponReceiving("A GET request to touch the endpoint")
+                    .With(new ProviderServiceRequest
+                    {
+                        Method = HttpVerb.Get,
+                        Path = "/",
+                        Headers = new Dictionary<string, object> { { "Accept", "text/plain" } },
+                    })
+                    .WillRespondWith(new ProviderServiceResponse
+                    {
+                        Status = 200,
+                        Headers = new Dictionary<string, object> { { "Content-Type", "application/json; charset=utf-8" } },
+                        Body = { }
+                    });
+
+                var testOptions = new Options { YamlFile = t.Filename };
+
+                /* 𝓐𝓬𝓽 */
+                var consumer = new HttpSequencer.HttpSequencer();
+                var result = consumer.RunSequence(testOptions);
+
+                /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
+                Assert.Equal(0, result);
+                consumeTestYamlPact.MockProviderService.VerifyInteractions();
+
+            }
+        }
+
+        [Fact]
         public void OneSequence()
         {
             /*     _                                                 

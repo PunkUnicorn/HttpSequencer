@@ -39,7 +39,7 @@ namespace PactTests_Whitebox
         }
 
         [Fact]
-        public void ExpectRetry_BadUrl()
+        public void ExpectFailAndRetry()
         {
             /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮... */
             SharedPactScafolding.BuildFailConsumerForId(ConsumeTestYamlPact, "00000001");
@@ -75,7 +75,7 @@ namespace PactTests_Whitebox
         }
 
         [Fact]
-        public void NoRetry()
+        public void ExpectSuccess()
         {
             /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮... */
             SharedPactScafolding.BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000001");
