@@ -69,7 +69,7 @@ namespace HttpSequencer
 
         public Exception Exception { get; set; }
 
-        public async Task<object> Action(CancellationToken cancelToken)
+        public async Task<object> ActionAsync(CancellationToken cancelToken)
         {
             return FailableRun<object>(this, delegate { 
                 ++this.ActionExecuteCount;

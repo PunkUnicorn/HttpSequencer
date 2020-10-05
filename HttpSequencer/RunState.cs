@@ -9,10 +9,10 @@ namespace HttpSequencer
     {
         public RunState()
         {
-            FailedSequenceActions = new List<ISequenceItemAction>();
+            //FailedSequenceActions = new List<ISequenceItemAction>();
         }
 
-        public List<ISequenceItemAction> FailedSequenceActions { get; set; }
+        //public List<ISequenceItemAction> FailedSequenceActions { get; set; }
 
         public ILogger Log { get; set; }
 

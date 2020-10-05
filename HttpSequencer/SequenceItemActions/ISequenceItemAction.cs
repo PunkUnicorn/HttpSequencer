@@ -9,7 +9,7 @@ namespace HttpSequencer.SequenceItemActions
     {
         ISequenceItemAction Create(RunState state, SequenceItem sequenceItem, object model, IEnumerable<SequenceItem> nextSequenceItems);
 
-        Task<object> Action(CancellationToken cancelToken);
+        Task<object> ActionAsync(CancellationToken cancelToken);
 
         ISequenceItemAction Parent { get; set; }
 

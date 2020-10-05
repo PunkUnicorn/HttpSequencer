@@ -1,5 +1,4 @@
 ﻿using HttpSequencer;
-using NLog.LayoutRenderers;
 using PactNet.Mocks.MockHttpService.Models;
 using PactTests;
 using System;
@@ -77,7 +76,7 @@ namespace PactTests_Blackbox
                 ConsumeTestYamlPact.MockProviderService.ClearInteractions();
 
 
-                /* 🅰🆁🆁🅰🅽🅶🅴  */
+                /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮 */
                 const string expectedMoreDetailString = nameof(expectedMoreDetailString);
 
                 ConsumeTestYamlPact.MockProviderService
@@ -126,11 +125,11 @@ namespace PactTests_Blackbox
 
                 var testOptions = new Options { YamlDirect = testYamlSequence };
 
-                /* 🅰🅲🆃 */
+                /* 𝓐𝓬𝓽 */
                 var provider = new HttpSequencer.HttpSequencer();
                 var result = provider.RunSequence(testOptions);
 
-                /* 🅰🆂🆂🅴🆁🆃 */
+                /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
                 Assert.Equal(1, result);
                 ConsumeTestYamlPact.MockProviderService.VerifyInteractions();
             }

@@ -27,4 +27,10 @@
     <ProjectReference Include="..\PactTests_Shared\PactTests_Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="DosAndLinuxBashScript.cmd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

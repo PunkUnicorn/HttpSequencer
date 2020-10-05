@@ -55,7 +55,7 @@ namespace HttpSequencer.SequenceItemActions
 
 		public dynamic GetModel() => this.model;
 		
-		public async Task<object> Action(CancellationToken cancelToken)
+		public async Task<object> ActionAsync(CancellationToken cancelToken)
         {
 			return FailableRun<object>(this, delegate {
 				++this.ActionExecuteCount;

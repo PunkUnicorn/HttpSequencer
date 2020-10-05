@@ -88,7 +88,7 @@ namespace HttpSequencer
 		public string exec { get; set; }
 		public string args { get; set; }
 		public Save save { get; set; }
-		public bool use_shell_execute { get; internal set; }
+		public bool use_shell_execute { get; set; }
 	}
 
 	public class UrlRequest

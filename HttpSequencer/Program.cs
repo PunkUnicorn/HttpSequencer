@@ -147,7 +147,7 @@ namespace HttpSequencer
 
                 breadcrumbs.Push(sequenceItemAction);
 
-                var result = await policy.Execute( async () => await sequenceItemAction.Action(cancelToken));
+                var result = await policy.Execute( async () => await sequenceItemAction.ActionAsync(cancelToken));
                 return !sequenceItemAction.IsFail;
             }
             catch (Exception e)
@@ -160,7 +160,7 @@ namespace HttpSequencer
         }
 
         // Return the result and what to do next
-        private static async Task<bool> SequenceItemDispatcherAsync(RunState state, ISequenceItemAction parent, object model, SequenceItem sequenceItem, IEnumerable<SequenceItem> nextSequenceItems, Stack<ISequenceItemAction> retryAfterList, Stack<ISequenceItemAction> breadcrumbs)
+        public static async Task<bool> SequenceItemDispatcherAsync(RunState state, ISequenceItemAction parent, object model, SequenceItem sequenceItem, IEnumerable<SequenceItem> nextSequenceItems, Stack<ISequenceItemAction> retryAfterList, Stack<ISequenceItemAction> breadcrumbs)
         {
             // try catch in here setup the retry after list as appropriate
 
@@ -188,7 +188,7 @@ namespace HttpSequencer
                     sequenceItemAction.Parent = parent;
                 }
 
-                var result = await sequenceItemAction.Action(cancelToken);
+                var result = await sequenceItemAction.ActionAsync(cancelToken);
 
                 if (sequenceItemAction.IsFail)
                     return false;
@@ -207,8 +207,9 @@ namespace HttpSequencer
             }
             finally
             {
-                if (sequenceItemAction.IsFail)
-                    state.FailedSequenceActions.Add(sequenceItemAction);
+                if (sequenceItemAction.IsFail && CanRetry(sequenceItem, sequenceItemAction))
+                    retryAfterList.Push(sequenceItemAction);
+                //state.FailedSequenceActions.Add(sequenceItemAction);
             }
         }
 
@@ -220,11 +221,16 @@ namespace HttpSequencer
 
             if (sequenceItem.is_abort_on_exception) return false;
 
-            if (sequenceItem.max_retrys < sequenceItemAction.ActionExecuteCount) return false;
+            if (!CanRetry(sequenceItem, sequenceItemAction)) return false;
 
             retryAfterList.Push(sequenceItemAction);
 
             return true;
+        }
+
+        private static bool CanRetry(SequenceItem sequenceItem, ISequenceItemAction sequenceItemAction)
+        {
+           return !(sequenceItem.max_retrys < sequenceItemAction.ActionExecuteCount);
         }
     }
 
