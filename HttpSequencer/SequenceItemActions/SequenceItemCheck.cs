@@ -12,7 +12,7 @@ namespace HttpSequencer
 {
     public class SequenceItemCheckException : Exception
     {
-        public SequenceItemCheckException(SequenceItem check, SequenceItemChecker checker, dynamic model, Stack<ISequenceItemAction> breadcrumbs)
+        public SequenceItemCheckException(SequenceItem check, SequenceItemCheck checker, dynamic model, Stack<ISequenceItemAction> breadcrumbs)
             : base($"{check.command} - Failed check '{check.check.pass_template}' with model:\n{JsonConvert.SerializeObject(model, Formatting.Indented)}")
         {
             SequenceItem = check;
@@ -22,19 +22,19 @@ namespace HttpSequencer
         }
 
         public SequenceItem SequenceItem { get; }
-        public SequenceItemChecker Checker { get; }
+        public SequenceItemCheck Checker { get; }
         public dynamic Model { get; }
         public Stack<ISequenceItemAction> Breadcrumbs { get; }
     }
 
-    public class SequenceItemChecker : ISequenceItemAction
+    public class SequenceItemCheck : ISequenceItemAction
     {
         private readonly object model;
         private readonly IEnumerable<SequenceItem> nextSequenceItems;
         private readonly RunState state;
         private readonly SequenceItem sequenceItem;
 
-        public SequenceItemChecker(RunState state, SequenceItem sequenceItem, object model, IEnumerable<SequenceItem> nextSequenceItems)
+        public SequenceItemCheck(RunState state, SequenceItem sequenceItem, object model, IEnumerable<SequenceItem> nextSequenceItems)
         {
             this.state = state;
             this.sequenceItem = sequenceItem;
@@ -45,7 +45,7 @@ namespace HttpSequencer
 
         public ISequenceItemAction Create(RunState state, SequenceItem sequenceItem, object model, IEnumerable<SequenceItem> nextSequenceItems)
         {
-            return new SequenceItemChecker(state, sequenceItem, model, nextSequenceItems);
+            return new SequenceItemCheck(state, sequenceItem, model, nextSequenceItems);
         }
 
         public int ActionExecuteCount { get; set; }
@@ -77,7 +77,7 @@ namespace HttpSequencer
                 IsFail = true;
 
                 if (this.sequenceItem.check == null)
-                    return this.model;
+                    throw new NullReferenceException($"{nameof(this.sequenceItem)}.{nameof(this.sequenceItem.check)} missing");
 
                 var scribanModel = new
                 {

@@ -66,7 +66,7 @@ namespace HttpSequencer.SequenceItemActions
                 ++this.ActionExecuteCount;
             
                 if (this.sequenceItem.send == null)
-                    return null;
+                    throw new NullReferenceException($"{nameof(this.sequenceItem)}.{nameof(this.sequenceItem.send)} missing");
 
                 var modelUrl = this.sequenceItem.send.url ?? "";
                 var scribanModel = new

@@ -1,5 +1,6 @@
 ﻿using HttpSequencer;
 using HttpSequencer.SequenceItemActions;
+using Newtonsoft.Json;
 using PactTests;
 using System;
 using System.Collections.Generic;
@@ -30,7 +31,7 @@ namespace PactTests_Whitebox
         }
 
         [Fact]
-        public void SequenceItemActionRun_BasicallyWorks_ExpectSuccess()
+        public void SequenceItemActionRun_ExpectSuccess()
         {
             /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮... */
             var testSequenceItem = new SequenceItem
@@ -51,11 +52,13 @@ namespace PactTests_Whitebox
             /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
             Assert.False(testSequenceItemAction.IsFail);
 
+            Assert.Null(testSequenceItemAction.Exception);
+
             Assert.EndsWith(ExecutableExpectedResult, actual);
         }
 
         [Fact]
-        public void SequenceItemActionRun_BasicallyWorks_ExpectFail()
+        public void SequenceItemActionRun_ExpectFail()
         {
             /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮... */
             var testSequenceItem = new SequenceItem
@@ -76,11 +79,13 @@ namespace PactTests_Whitebox
             /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
             Assert.True(testSequenceItemAction.IsFail);
 
+            Assert.NotNull(testSequenceItemAction.Exception);
+
             Assert.Null(actual);
         }
 
         [Fact]
-        public void SequenceItemActionRun_TypicalOperation_ScribanSubstitute()
+        public void SequenceItemActionRun_ScribanSubstitute()
         {
             /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮... */
             var testSequenceItem = new SequenceItem
@@ -103,7 +108,154 @@ namespace PactTests_Whitebox
             /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
             Assert.False(testSequenceItemAction.IsFail);
 
+            Assert.Null(testSequenceItemAction.Exception);
+
             Assert.EndsWith(ExecutableExpectedResult, actual);
+        }
+
+        [Fact]
+        public void SequenceItemActionCheck_ExpectSuccess()
+        {
+            /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮... */
+            var testSequenceItem = new SequenceItem
+            {
+                command = "check-item",
+                check = new SequenceCheck { pass_template = "true" }
+            };
+
+            var dummyRunState = new RunState { YamlOptions = new YamlOptions { sequence_items = new[] { testSequenceItem }.ToList() } };
+
+            var testModel = new { SomeData = "this is some data" };
+
+            var testSequenceItemAction = new SequenceItemCheck(dummyRunState, testSequenceItem, testModel, new List<SequenceItem>());
+
+
+            /* 𝓐𝓬𝓽 */
+            var actual = testSequenceItemAction.ActionAsync(new CancellationToken()).Result;
+
+
+            /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
+            Assert.False(testSequenceItemAction.IsFail);
+
+            Assert.Null(testSequenceItemAction.Exception);
+
+            Assert.Equal(JsonConvert.SerializeObject(testModel), JsonConvert.SerializeObject(actual));
+        }
+
+        [Fact]
+        public void SequenceItemActionCheck_ExpectFail()
+        {
+            /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮... */
+            var testSequenceItem = new SequenceItem
+            {
+                command = "check-item",
+                check = new SequenceCheck { pass_template = "false" }
+            };
+
+            var dummyRunState = new RunState { YamlOptions = new YamlOptions { sequence_items = new[] { testSequenceItem }.ToList() } };
+
+            var testModel = new { SomeData = "this is some data" };
+
+            var testSequenceItemAction = new SequenceItemCheck(dummyRunState, testSequenceItem, testModel, new List<SequenceItem>());
+
+
+            /* 𝓐𝓬𝓽 */
+            var actual = testSequenceItemAction.ActionAsync(new CancellationToken()).Result;
+
+
+            /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
+            Assert.True(testSequenceItemAction.IsFail);
+
+            Assert.Null(testSequenceItemAction.Exception);
+
+            Assert.Equal(JsonConvert.SerializeObject(testModel), JsonConvert.SerializeObject(actual));
+        }
+
+        [Fact]
+        public void SequenceItemActionCheck_ScribanSubstitute_CheckPasses()
+        {
+            /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮... */
+            var testSequenceItem = new SequenceItem
+            {
+                command = "test-check-item",
+                check = new SequenceCheck { pass_template = "{{if model.someData == 'the correct data'}}true{{else}}false{{end}}" }
+            };
+
+            var testModel = new { someData = "the correct data" };
+
+            var dummyRunState = new RunState { YamlOptions = new YamlOptions { sequence_items = new[] { testSequenceItem }.ToList() } };
+
+            var testSequenceItemAction = new SequenceItemCheck(dummyRunState, testSequenceItem, testModel, new List<SequenceItem>());
+
+
+            /* 𝓐𝓬𝓽 */
+            var actual = testSequenceItemAction.ActionAsync(new CancellationToken()).Result;
+
+
+            /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
+            Assert.False(testSequenceItemAction.IsFail);
+
+            Assert.Null(testSequenceItemAction.Exception);
+
+            Assert.Equal(JsonConvert.SerializeObject(testModel), JsonConvert.SerializeObject(actual));
+        }
+
+        [Fact]
+        public void SequenceItemActionCheck_ScribanSubstitute_CheckFails()
+        {
+            /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮... */
+            var testSequenceItem = new SequenceItem
+            {
+                command = "some-check",
+                check = new SequenceCheck { pass_template = "{{if model.someData == 'the correct data'}}true{{else}}false{{end}}" }
+            };
+
+            var testModel = new { someData = "this is NOT the correct data" };
+
+            var dummyRunState = new RunState { YamlOptions = new YamlOptions { sequence_items = new[] { testSequenceItem }.ToList() } };
+
+            var testSequenceItemAction = new SequenceItemCheck(dummyRunState, testSequenceItem, testModel, new List<SequenceItem>());
+
+
+            /* 𝓐𝓬𝓽 */
+            var actual = testSequenceItemAction.ActionAsync(new CancellationToken()).Result;
+
+
+            /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
+            Assert.True(testSequenceItemAction.IsFail);
+
+            Assert.Null(testSequenceItemAction.Exception);
+
+            Assert.Equal(JsonConvert.SerializeObject(testModel), JsonConvert.SerializeObject(actual));
+        }
+
+        [Fact]
+        public void SequenceItemActionCheck_ScribanSubstitute_InvalidScriban()
+        {
+            /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮... */
+            var testSequenceItem = new SequenceItem
+            {
+                command = "some-check",
+                check = new SequenceCheck { pass_template = "{{this is not valid scriban!}}true{{else}}false{{end}}" }
+            };
+
+            var testModel = new { someData = "some data" };
+
+            var dummyRunState = new RunState { YamlOptions = new YamlOptions { sequence_items = new[] { testSequenceItem }.ToList() } };
+
+            var testSequenceItemAction = new SequenceItemCheck(dummyRunState, testSequenceItem, testModel, new List<SequenceItem>());
+
+
+            /* 𝓐𝓬𝓽 */
+            var actual = testSequenceItemAction.ActionAsync(new CancellationToken()).Result;
+
+
+            /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
+            Assert.True(testSequenceItemAction.IsFail);
+
+            Assert.NotNull(testSequenceItemAction.Exception);
+
+            Assert.Null(actual);
         }
     }
 }

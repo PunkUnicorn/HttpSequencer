@@ -199,7 +199,9 @@ sequence_items:
             var testYamlSequence = new YamlOptions
             {
                 sequence_items = new List<SequenceItem> {
-                    /* First */
+                    /* First
+                     * Get a list of ids, which will be a list of one id. 
+                     * For each of these (that is, for the list of one) use that id in the next request */
                     new SequenceItem
                     {
                         command = "one-of-two",

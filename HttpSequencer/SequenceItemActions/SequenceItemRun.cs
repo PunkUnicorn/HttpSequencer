@@ -61,7 +61,8 @@ namespace HttpSequencer.SequenceItemActions
 				++this.ActionExecuteCount;
 
 				if (this.sequenceItem.run == null)
-					return null;
+					throw new NullReferenceException($"{nameof(this.sequenceItem)}.{nameof(this.sequenceItem.run)} missing");
+
 
 				this.state.Log?.Info($"Running {this.sequenceItem.run.exec}...");
 

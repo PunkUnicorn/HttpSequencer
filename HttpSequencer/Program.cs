@@ -176,7 +176,7 @@ namespace HttpSequencer
                 else if (sequenceItem.run != null)
                     sequenceItemAction = new SequenceItemRun(state, sequenceItem, model, nextSequenceItems);
                 else if (sequenceItem.check != null)
-                    sequenceItemAction = new SequenceItemChecker(state, sequenceItem, model, nextSequenceItems);
+                    sequenceItemAction = new SequenceItemCheck(state, sequenceItem, model, nextSequenceItems);
                 
                 breadcrumbs.Push(sequenceItemAction);
 
