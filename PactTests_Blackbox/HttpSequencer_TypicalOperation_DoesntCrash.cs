@@ -75,7 +75,7 @@ sequence_items:
 
                 /* 𝓐𝓬𝓽 */
                 var consumer = new HttpSequencer.HttpSequencer();
-                var result = consumer.RunSequence(testOptions);
+                var result = consumer.RunSequenceAsync(testOptions).Result;
 
                 /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
                 Assert.Equal(0, result);
@@ -140,7 +140,7 @@ sequence_items:
 
             var consumer = new HttpSequencer.HttpSequencer();
 
-            var result = consumer.RunSequence(testOptions);
+            var result = consumer.RunSequenceAsync(testOptions).Result;
 
 
 
@@ -233,7 +233,7 @@ sequence_items:
             /* 𝓐𝓬𝓽 */
 
             var consumer = new HttpSequencer.HttpSequencer();
-            var result = consumer.RunSequence(testOptions);
+            var result = consumer.RunSequenceAsync(testOptions).Result;
 
 
             /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
@@ -327,7 +327,7 @@ sequence_items:
             /* 𝓐𝓬𝓽 */
 
             var provider = new HttpSequencer.HttpSequencer();
-            var result = provider.RunSequence(testOptions);
+            var result = provider.RunSequenceAsync(testOptions).Result;
 
 
             /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
@@ -421,7 +421,7 @@ sequence_items:
             /* 𝓐𝓬𝓽 */
 
             var provider = new HttpSequencer.HttpSequencer();
-            var result = provider.RunSequence(testOptions);
+            var result = provider.RunSequenceAsync(testOptions).Result;
 
 
             /* 𝓐𝓼𝓼𝓮𝓻𝓽 */

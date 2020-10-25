@@ -14,51 +14,18 @@ using static HttpSequencer.SequenceItemActions.SequenceItemStatic;
 
 namespace HttpSequencer.SequenceItemActions
 {
-    public class SequenceItemSend : ISequenceItemAction
+    public class SequenceItemSend : SequenceItemAbstract, ISequenceItemAction
     {
         public string WorkingUri { get; private set; }
         public string WorkingBody { get; private set; }
 
-
-        private readonly object model;
-        private readonly IEnumerable<SequenceItem> nextSequenceItems;
-        private readonly RunState state;
-        private readonly SequenceItem sequenceItem;
-
         public SequenceItemSend(RunState state, SequenceItem sequenceItem, object model, IEnumerable<SequenceItem> nextSequenceItems)
+            : base(state, sequenceItem, model, nextSequenceItems) { }
+
+        public IEnumerable<string> Compile(SequenceItem sequenceItem)
         {
-            this.state = state;
-            this.sequenceItem = sequenceItem;
-            this.model = Clone(model);
-            this.nextSequenceItems = nextSequenceItems;
-            Children = new List<ISequenceItemAction>();
+            return new string[] { };
         }
-
-        public ISequenceItemAction Create(RunState state, SequenceItem sequenceItem, object model, IEnumerable<SequenceItem> nextSequenceItems)
-        {
-            return new SequenceItemSend(state, sequenceItem, model, nextSequenceItems);
-        }
-
-        public ISequenceItemAction Parent { get; set; }
-
-        public List<ISequenceItemAction> Children { get; }
-
-        public int ActionExecuteCount { get; set; }
-
-        public ISequenceItemAction Fail(Exception e = null)
-        {
-            IsFail = true;
-            Exception = e ?? Exception;
-            return this;
-        }
-
-        public bool IsFail { get; set; }
-
-        public Exception Exception { get; set; }
-
-        public SequenceItem GetSequenceItem() => this.sequenceItem;
-
-        public dynamic GetModel() => this.model;
 
         public async Task<object> ActionAsync(CancellationToken cancelToken)
         {
@@ -230,8 +197,6 @@ namespace HttpSequencer.SequenceItemActions
                             throw new InvalidOperationException($"Unknown {nameof(method)}: '{method}'");
                     }
                     return methodResult;
-                    //var retval = await methodResult;
-                    //return retval;
                 });
 
                 return await ret;
@@ -239,7 +204,6 @@ namespace HttpSequencer.SequenceItemActions
             catch (Exception e)
             {
                 throw;
-                //GenericExceptionHandler(e, method + "," + url);
             }
         }
 
@@ -260,9 +224,15 @@ namespace HttpSequencer.SequenceItemActions
                 //Add customer headers
                 foreach (var addHeader in entry.send.header)
                     if (addHeader.Key.Equals("accept", StringComparison.InvariantCultureIgnoreCase))
-                        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(ScribanUtil.ScribanParse(addHeader.Value, scribanModel)));
+                    {                        
+                        var vals = ScribanUtil.ScribanParse(addHeader.Value, scribanModel);                        
+                        foreach (var val in vals.Split(',').Select(s => s.Trim()))
+                            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(val));
+                    }
                     else
+                    { 
                         client.DefaultRequestHeaders.Add(addHeader.Key, ScribanUtil.ScribanParse(addHeader.Value, scribanModel));
+                    }
             }
 
             if (client.DefaultRequestHeaders.Accept.Count == 0)

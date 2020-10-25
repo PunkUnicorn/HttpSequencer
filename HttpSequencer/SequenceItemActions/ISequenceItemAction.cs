@@ -7,7 +7,7 @@ namespace HttpSequencer.SequenceItemActions
 {
     public interface ISequenceItemAction
     {
-        ISequenceItemAction Create(RunState state, SequenceItem sequenceItem, object model, IEnumerable<SequenceItem> nextSequenceItems);
+        IEnumerable<string> Compile(SequenceItem sequenceItem);
 
         Task<object> ActionAsync(CancellationToken cancelToken);
 
@@ -26,5 +26,7 @@ namespace HttpSequencer.SequenceItemActions
         dynamic GetModel();
 
         ISequenceItemAction Fail(Exception e=null);
+
+        string Breadcrumb { get; }
     }
 }

@@ -28,7 +28,7 @@ namespace PactTests_Whitebox
             testSequenceItem = new SequenceItem
             {
                 command = "some-request",
-                max_retrys = 1,
+                max_delayed_retrys = 1,
                 send = new UrlRequest
                 {
                     header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json") },
@@ -44,23 +44,21 @@ namespace PactTests_Whitebox
             /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮... */
             SharedPactScafolding.BuildFailConsumerForId(ConsumeTestYamlPact, "00000001");
 
-            var dummyRunState = new RunState { YamlOptions = new YamlOptions { sequence_items = new[] { testSequenceItem }.ToList() } };
-            var dummyToDoAfterList = new List<SequenceItem>();
+            var processorOptions = new ProcessSequenceItem.Options
+            {
+                state = new RunState { YamlOptions = new YamlOptions { sequence_items = new[] { testSequenceItem }.ToList() } },
+                parent = null,
+                model = new { Id = "00000001" },
+                sequenceItem = testSequenceItem,
+                breadcrumbs = new Stack<KeyValuePair<string, ISequenceItemAction>>()
+            };
 
-            var testModel = new { Id = "00000001" };
-            
 
             /* 𝓐𝓬𝓽 */
             var actualRetryAfterResult = new Stack<ISequenceItemAction>();
 
-            var actualResult = SequenceItemDispatcherAsync(
-                dummyRunState,
-                null, 
-                testModel,
-                testSequenceItem,
-                dummyToDoAfterList,
-                actualRetryAfterResult, 
-                new Stack<ISequenceItemAction>()).Result;
+            var processor = new ProcessSequenceItem(processorOptions);
+            var actualResult = processor.ProcessSequenceItemAsync(actualRetryAfterResult).Result;
 
 
             /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
@@ -70,8 +68,8 @@ namespace PactTests_Whitebox
 
             Assert.Same(testSequenceItem, actualRetryAfterResult.Single().GetSequenceItem());
 
-            Assert.Contains(actualRetryAfterResult, 
-                item => item.ActionExecuteCount == 1);
+            Assert.Contains(actualRetryAfterResult,
+                item => item.ActionExecuteCount == 2);
         }
 
         [Fact]
@@ -80,29 +78,25 @@ namespace PactTests_Whitebox
             /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮... */
             SharedPactScafolding.BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000001");
 
-            var dummyRunState = new RunState { YamlOptions = new YamlOptions { sequence_items = new[] { testSequenceItem }.ToList() } };
-            var dummyToDoAfterList = new List<SequenceItem>();
-
-            var testModel = new { Id = "00000001" };
-
+            var processorOptions = new ProcessSequenceItem.Options
+            {
+                state = new RunState { YamlOptions = new YamlOptions { sequence_items = new[] { testSequenceItem }.ToList() } },
+                parent = null,
+                model = new { Id = "00000001" },
+                sequenceItem = testSequenceItem,
+                breadcrumbs = new Stack<KeyValuePair<string, ISequenceItemAction>>()
+            };
 
             /* 𝓐𝓬𝓽 */
             var actualRetryAfterResult = new Stack<ISequenceItemAction>();
 
-            var actualResult = SequenceItemDispatcherAsync(
-                dummyRunState,
-                null,
-                testModel,
-                testSequenceItem,
-                dummyToDoAfterList,
-                actualRetryAfterResult,
-                new Stack<ISequenceItemAction>()).Result;
-
+            var processor = new ProcessSequenceItem(processorOptions);
+            var actualResult = processor.SequenceItemDispatcherAsync(actualRetryAfterResult).Result;
 
             /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
             ConsumeTestYamlPact.MockProviderService.VerifyInteractions();
 
-            Assert.True(actualResult);
+            Assert.True(actualResult.IsSuccess);
 
             Assert.Empty(actualRetryAfterResult);
         }

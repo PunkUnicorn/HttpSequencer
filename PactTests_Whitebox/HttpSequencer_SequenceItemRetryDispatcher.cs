@@ -27,10 +27,6 @@ namespace PactTests_Whitebox
             ConsumeTestYamlPact.MockProviderService.ClearInteractions();
         }
 
-        // ALSO TEST THAt the first SequenceItemDispatcher leaves something in the retryAfterList
-        // as another test
-
-
         [Fact]
         public void RetryOnce_EndingWith_Success()
         {
@@ -40,14 +36,12 @@ namespace PactTests_Whitebox
             SharedPactScafolding.BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000001");
 
             /* ...the gubbins for the HttpSequencer component to work*/
-            var dummyRunState = new RunState { };
-            var dummyRunAfterList = new SequenceItem[] { };
 
             var testModel = new { Id = "00000001" };
             var testSequenceItem = new SequenceItem
             {
                 command = "something-that-previously-failed",
-                max_retrys = 1,
+                max_delayed_retrys = 1,
                 send = new UrlRequest
                 {
                     header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json") },
@@ -55,27 +49,38 @@ namespace PactTests_Whitebox
                     url = $"http://localhost:{Port}/second/" + "{{model.Id}}"
                 }
             };
-            dummyRunState.YamlOptions = new YamlOptions { sequence_items = new[] { testSequenceItem }.ToList() };
-            var testRetryList = new List<ISequenceItemAction>() { new SequenceItemSend(dummyRunState, testSequenceItem, testModel, dummyRunAfterList) };
 
+            var dummyRunAfterList = new SequenceItem[] { };
+            var dummyRunState = new RunState { YamlOptions = new YamlOptions { sequence_items = new[] { testSequenceItem }.ToList() } };
+
+            var testRetryList = new List<ISequenceItemAction>() { new SequenceItemSend(dummyRunState, testSequenceItem, testModel, dummyRunAfterList) };
+            
+            var processorOptions = new ProcessSequenceItem.Options
+            {
+                state = new RunState { YamlOptions = new YamlOptions { sequence_items = new[] { testSequenceItem }.ToList() } },
+                parent = null,
+                model = null,
+                sequenceItem = null,
+                breadcrumbs = new Stack<KeyValuePair<string, ISequenceItemAction>>()
+            };
 
             /* 𝓐𝓬𝓽 */
-
             var actualRetryAfterResult = new Stack<ISequenceItemAction>();
 
-            var actualResult = SequenceItemRetryDispatcherAsync(
+            var actualResult = new ProcessSequenceItem(processorOptions).SequenceItemRetryDispatcherAsync(
                 new CancellationToken(),
+                false,
                 testRetryList,
                 dummyRunState,
                 actualRetryAfterResult,
-                new Stack<ISequenceItemAction>() ).Result;
+                new Stack<KeyValuePair<string, ISequenceItemAction>>()).Result;
 
 
             /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
 
             ConsumeTestYamlPact.MockProviderService.VerifyInteractions();
 
-            Assert.True(actualResult);
+            Assert.True(actualResult.IsSuccess);
 
             Assert.Empty(actualRetryAfterResult);
         }
@@ -88,7 +93,7 @@ namespace PactTests_Whitebox
             /* ...the Pact server */
             SharedPactScafolding.BuildFailConsumerForId(ConsumeTestYamlPact, "00000001");
 
-            /* ...the gubbins for the HttpSequencer component to work*/
+            /* ...the gubbins for the HttpSequencer component*/
             var dummyRunState = new RunState { };
             var dummyRunAfterList = new SequenceItem[] { };
 
@@ -96,7 +101,7 @@ namespace PactTests_Whitebox
             var testSequenceItem = new SequenceItem
             {
                 command = "something-that-previously-failed",
-                max_retrys = 1,
+                max_delayed_retrys = 1,
                 send = new UrlRequest
                 {
                     header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json") },
@@ -107,26 +112,36 @@ namespace PactTests_Whitebox
             dummyRunState.YamlOptions = new YamlOptions { sequence_items = new[] { testSequenceItem }.ToList() };
             var testRetryList = new List<ISequenceItemAction>() { new SequenceItemSend(dummyRunState, testSequenceItem, testModel, dummyRunAfterList) };
 
+            var processorOptions = new ProcessSequenceItem.Options
+            {
+                state = new RunState { YamlOptions = new YamlOptions { sequence_items = new[] { testSequenceItem }.ToList() } },
+                parent = null,
+                model = null,
+                sequenceItem = null,
+                breadcrumbs = new Stack<KeyValuePair<string, ISequenceItemAction>>()
+            };
 
             /* 𝓐𝓬𝓽 */
 
             var actualRetryAfterResult = new Stack<ISequenceItemAction>();
 
-            var actualResult = SequenceItemRetryDispatcherAsync(
+            var actualResult = new ProcessSequenceItem(processorOptions).SequenceItemRetryDispatcherAsync(
                 new CancellationToken(),
+                false,
                 testRetryList,
                 dummyRunState,
                 actualRetryAfterResult,
-                new Stack<ISequenceItemAction>()).Result;
+                new Stack<KeyValuePair<string, ISequenceItemAction>>()).Result;
 
 
             /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
 
             ConsumeTestYamlPact.MockProviderService.VerifyInteractions();
 
-            Assert.False(actualResult);
+            Assert.False(actualResult.IsSuccess);
 
-            Assert.Empty(actualRetryAfterResult);
+            Assert.Contains(actualRetryAfterResult,
+                item => item.ActionExecuteCount == 1);
         }
     }
 }

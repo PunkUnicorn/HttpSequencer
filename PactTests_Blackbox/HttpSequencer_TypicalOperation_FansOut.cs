@@ -92,7 +92,7 @@ namespace PactTests_Blackbox
             /* 𝓐𝓬𝓽 */
 
             var provider = new HttpSequencer.HttpSequencer();
-            var result = provider.RunSequence(testOptions);
+            var result = provider.RunSequenceAsync(testOptions).Result;
 
 
             /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
@@ -137,7 +137,7 @@ namespace PactTests_Blackbox
             /* 𝓐𝓬𝓽 */
 
             var provider = new HttpSequencer.HttpSequencer();
-            var result = provider.RunSequence(testOptions);
+            var result = provider.RunSequenceAsync(testOptions).Result;
 
 
             /* 𝓐𝓼𝓼𝓮𝓻𝓽 */
@@ -182,7 +182,7 @@ namespace PactTests_Blackbox
             /* 𝓐𝓬𝓽 */
 
             var provider = new HttpSequencer.HttpSequencer();
-            var result = provider.RunSequence(testOptions);
+            var result = provider.RunSequenceAsync(testOptions).Result;
 
 
             /* 𝓐𝓼𝓼𝓮𝓻𝓽 */

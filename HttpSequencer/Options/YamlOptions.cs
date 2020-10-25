@@ -1,16 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace HttpSequencer
 {
 	public class YamlOptions
 	{
-		public Header header { get; set; }
+		public KeyValueList header { get; set; }
 		public int? client_timeout_seconds { get; set; }
 		public string run_id { get; set; }
 		public string base_url { get; set; }
-		//public List<Logger> loggers { get; set; }
 		public List<SequenceItem> sequence_items { get; set; }
+	}
+
+
+	public class KeyValueList : List<KeyValuePair<string /*name*/, string /*value*/>> 
+	{
+		public KeyValueList() { }
+		public KeyValueList(List<KeyValuePair<string, string>> toAdd)
+        {
+			this.AddRange(toAdd);
+        }
 	}
 
 	//[Flags]
@@ -32,25 +42,32 @@ namespace HttpSequencer
 	//	public string on_success { get; set; }
 	//}
 
-	public class Header
-	{
-		public string toc_code { get; set; }
-		public string fleet_code { get; set; }
-		public string auth_code { get; set; }
-	}
 
 	public class SequenceItem
 	{
         public string command { get; set; }
+
+
+
+		/// <summary>
+		/// MAke this a scriban parsed template to render the stack of breadcrumbs describing the progress
+		/// </summary>
+		public string breadcrumb { get; set; }
+
+
+
 		public UrlRequest send { get; set; }
 		/// <summary>
 		/// Number of retrys to do instantly after the fail
 		/// </summary>
 		public int? max_instant_retrys;
-		/// <summary>
-		/// Number of retrys to do after the other peer sequences are finished. This is a delayed retry
-		/// </summary>
-		public int? max_retrys { get; set;}
+        
+		public HttpArchive har;
+
+        /// <summary>
+        /// Number of retrys to do after the other peer sequences are finished. This is a delayed retry
+        /// </summary>
+        public int? max_delayed_retrys { get; set;}
 		/// <summary>
 		/// Set to true to treat the model as an array, with each array item being processed individually
 		/// Set to false to treat the model as a single object
@@ -61,6 +78,26 @@ namespace HttpSequencer
 		public bool is_abort_on_exception { get; set; }
 
 		public SequenceCheck check { get; set; }
+	}
+
+    public class HttpArchive
+    {
+		/// <summary>
+		/// Har file contents as direct yaml
+		/// </summary>
+		public HarSharp.Har direct { get; set; }
+		/// <summary>
+		/// File reference to a har file
+		/// </summary>
+		public string file { get; set; }
+		/// <summary>
+		/// Url of a har file
+		/// </summary>
+		public string url { get; set; }
+		/// <summary>
+		/// Json string holding the har file
+		/// </summary>
+		public string json { get; set; }
 	}
 
     public class SequenceCheck
@@ -80,8 +117,6 @@ namespace HttpSequencer
 		public bool content_is_binary { get; set; }
 		public string response_filename { get; set; }
 	}
-
-	public class KeyValueList : List<KeyValuePair<string /*name*/, string /*value*/>> { }
 
 	public class Run
 	{

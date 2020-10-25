@@ -27,47 +27,15 @@ namespace HttpSequencer
         public Stack<ISequenceItemAction> Breadcrumbs { get; }
     }
 
-    public class SequenceItemCheck : ISequenceItemAction
+    public class SequenceItemCheck : SequenceItemAbstract, ISequenceItemAction
     {
-        private readonly object model;
-        private readonly IEnumerable<SequenceItem> nextSequenceItems;
-        private readonly RunState state;
-        private readonly SequenceItem sequenceItem;
-
         public SequenceItemCheck(RunState state, SequenceItem sequenceItem, object model, IEnumerable<SequenceItem> nextSequenceItems)
+            : base(state, sequenceItem, model, nextSequenceItems) { }
+
+        public IEnumerable<string> Compile(SequenceItem sequenceItem)
         {
-            this.state = state;
-            this.sequenceItem = sequenceItem;
-            this.model = Clone(model);
-            this.nextSequenceItems = nextSequenceItems;
-            Children = new List<ISequenceItemAction>();
+            return new string[] { };
         }
-
-        public ISequenceItemAction Create(RunState state, SequenceItem sequenceItem, object model, IEnumerable<SequenceItem> nextSequenceItems)
-        {
-            return new SequenceItemCheck(state, sequenceItem, model, nextSequenceItems);
-        }
-
-        public int ActionExecuteCount { get; set; }
-
-        public ISequenceItemAction Parent { get; set; }
-
-        public List<ISequenceItemAction> Children { get; }
-
-        public SequenceItem GetSequenceItem() => this.sequenceItem;
-
-        public dynamic GetModel() => this.model;
-
-        public ISequenceItemAction Fail(Exception e=null)
-        {
-            IsFail = true;
-            Exception = e ?? Exception;
-            return this;
-        }
-
-        public bool IsFail { get; set; } 
-
-        public Exception Exception { get; set; }
 
         public async Task<object> ActionAsync(CancellationToken cancelToken)
         {
