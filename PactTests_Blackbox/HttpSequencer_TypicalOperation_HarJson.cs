@@ -1,7 +1,4 @@
 ﻿using HttpSequencer;
-using PactNet.Mocks.MockHttpService.Models;
-using PactTests;
-using System;
 using System.Collections.Generic;
 using Xunit;
 
@@ -5534,19 +5531,7 @@ namespace PactTests_Blackbox
                         {
                             json = jsonHarContent
                         }
-                    }//,
-                    ///* Second */
-                    //new SequenceItem
-                    //{
-                    //    command = "two-of-two",
-                    //    is_model_array = true,
-                    //    send = new UrlRequest
-                    //    {
-                    //        header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
-                    //        http_method = "GET",
-                    //        url = $"http://localhost:{port}/second/" + "{{model.Id}}"
-                    //    }
-                    //},
+                    }
                 }
             };
         }

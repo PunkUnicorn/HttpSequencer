@@ -225,9 +225,21 @@ namespace HttpSequencer.SequenceItemActions
                 foreach (var addHeader in entry.send.header)
                     if (addHeader.Key.Equals("accept", StringComparison.InvariantCultureIgnoreCase))
                     {                        
-                        var vals = ScribanUtil.ScribanParse(addHeader.Value, scribanModel);                        
+                        var vals = ScribanUtil.ScribanParse(addHeader.Value, scribanModel);
                         foreach (var val in vals.Split(',').Select(s => s.Trim()))
-                            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(val));
+                        { 
+                            var queryParts = val.Split(';');
+                            if (queryParts.Length > 1)
+                            {
+                                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(queryParts[0]));
+                                foreach (var queryPart in queryParts.Skip(1))
+                                {
+                                    var keyVal = queryPart.Split('=');
+                                    client.DefaultRequestHeaders.Add(keyVal[0], keyVal[1]);
+                                }
+                            }
+                            else client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(val));
+                        }
                     }
                     else
                     { 

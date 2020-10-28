@@ -159,14 +159,15 @@ namespace HttpSequencer
             }
             catch (Exception e)
             {
-                if (!CanDealWithException(e, true, sequenceItemAction, options.sequenceItem, options.breadcrumbs))
+                if (sequenceItemAction != null
+                && !CanDealWithException(e, true, sequenceItemAction, options.sequenceItem, options.breadcrumbs))
                     sequenceItemAction.Fail(e);
 
                 return new SequenceItemDispatcherResult { IsSuccess = !sequenceItemAction.IsFail };
             }
             finally
             {
-                if (sequenceItemAction.IsFail)
+                if (sequenceItemAction?.IsFail ?? true)
                     retryAfter.Push(sequenceItemAction);
             }
         }

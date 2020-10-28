@@ -3,9 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 
 namespace HttpSequencer.SequenceItemActions
 {
@@ -33,7 +30,15 @@ namespace HttpSequencer.SequenceItemActions
 
         public static object Clone(object model)
         {
-            return JsonConvert.DeserializeObject<ExpandoObject>(JsonConvert.SerializeObject(model)) as dynamic;
+            if (model == null) return null;
+            try { return JsonConvert.DeserializeObject<ExpandoObject>(JsonConvert.SerializeObject(model)) as dynamic; }
+            catch 
+            { 
+                if (model is string strModel)
+                    return new String(strModel.ToArray()); 
+
+                return model;
+            }
         }
 
         public static T FailableRun<T>(ISequenceItemAction sia, Func<T> f)

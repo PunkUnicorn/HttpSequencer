@@ -87,7 +87,7 @@ namespace HttpSequencer
         private SequenceItem ProcessEntry(int index, Log log, Entry entry)
         {
             var clone = JsonConvert.SerializeObject(base.sequenceItem);            
-            var ret = JsonConvert.DeserializeObject<SequenceItem> (clone);
+            var ret = JsonConvert.DeserializeObject<SequenceItem>(clone);
 
             ret.command = $"{ret.command}-har-log-entries[{index}]";
             ret.har = null;
