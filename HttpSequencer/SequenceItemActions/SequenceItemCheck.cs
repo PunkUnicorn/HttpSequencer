@@ -37,7 +37,9 @@ namespace HttpSequencer
             return new string[] { };
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public async Task<object> ActionAsync(CancellationToken cancelToken)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             return FailableRun<object>(this, delegate { 
                 ++this.ActionExecuteCount;
@@ -58,6 +60,9 @@ namespace HttpSequencer
                 IsFail = !this.sequenceItem.check.IsPass(scribanModel);
 
                 if (IsFail) Fail();
+
+                var resultString = IsFail ? "Fail" : "Success";
+                this.state.ProgressLog?.Progress($":{resultString}:{sequenceItem.command}");
 
                 return this.model;
             });

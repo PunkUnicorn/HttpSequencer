@@ -1,8 +1,11 @@
 ﻿using CommandLine;
 using NLog;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
+using System.Text;
 
 namespace HttpSequencer
 {
@@ -24,7 +27,7 @@ namespace HttpSequencer
         {
             try
             {
-                var parsedOptions = Parser.Default.ParseArguments<Options, int>(args);
+                var parsedOptions = Parser.Default.ParseArguments<Options>(args);
                 var options = parsedOptions.MapResult((o) => o as Options, (o) => null as Options);
                 return new HttpSequencer().RunSequenceAsync(options).Result;
             }
@@ -38,7 +41,7 @@ namespace HttpSequencer
 
     public interface IProgressLog
     {
-        void Started(SequenceItem successWith);
+        void Started(string runid, SequenceItem successWith);
 
         void Progress(string message);
 
@@ -46,12 +49,12 @@ namespace HttpSequencer
 
         void Success(SequenceItem successWith);
 
-        void Fail(SequenceItem failWith);
+        void Fail(Stack<KeyValuePair<string, SequenceItemActions.ISequenceItemAction>> breadcrumbs, SequenceItem failWith);
     }
 
     public class ConsoleProgressLog : IProgressLog
     {
-        public void Started(SequenceItem message)
+        public void Started(string runid, SequenceItem message)
         {
             Console.WriteLine(message);
         }
@@ -71,7 +74,7 @@ namespace HttpSequencer
             Console.WriteLine("Success:" + successWith.command);
         }
 
-        public void Fail(SequenceItem failWith)
+        public void Fail(System.Collections.Generic.Stack<System.Collections.Generic.KeyValuePair<string, SequenceItemActions.ISequenceItemAction>> breadcrumbs, SequenceItem failWith)
         {
             Console.Error.WriteLine("Fail:" + failWith.command);
         }
@@ -79,7 +82,7 @@ namespace HttpSequencer
 
     public class DebugProgressLog : IProgressLog
     {
-        public void Started(SequenceItem message)
+        public void Started(string runid, SequenceItem message)
         {
             Debug.WriteLine(message);
         }
@@ -99,7 +102,7 @@ namespace HttpSequencer
             Debug.WriteLine("Success:" + successWith.command);
         }
 
-        public void Fail(SequenceItem failWith)
+        public void Fail(System.Collections.Generic.Stack<System.Collections.Generic.KeyValuePair<string, SequenceItemActions.ISequenceItemAction>> breadcrumbs, SequenceItem failWith)
         {
             Debug.WriteLine("Fail:" + failWith.command);
         }
@@ -108,36 +111,48 @@ namespace HttpSequencer
 
     public class NLogProgressLog : IProgressLog
     {
-        public NLog.Logger Logger { get; }
+        private const int padWidth = 50;
+        private StringBuilder ProgressLog { get; set; } = new StringBuilder();
+        public NLog.Logger Logger { get; }  = LogManager.GetLogger(nameof(Program));
+        private string runid;
 
-        public NLogProgressLog()
+        public void Started(string runid, SequenceItem sequenceItem)
         {
-            Logger = LogManager.GetLogger(nameof(Program));
+            this.runid = runid;
+            Logger.Info($"{runid,padWidth} - {nameof(Started)}:{sequenceItem.command}");
         }
 
-        public void Started(SequenceItem message)
+        public void Fail(Stack<KeyValuePair<string, SequenceItemActions.ISequenceItemAction>> breadcrumbs, SequenceItem failWith)
         {
-            Logger.Info(message);
-        }
+            //if (breadcrumbs.Any())
+            //    ProgressLog.Append($"{nameof(breadcrumbs)}>-->{string.Join(">-->", string.Join(">-->", breadcrumbs.Select(s => s.Value.GetSequenceItem().command)))}");
 
-        public void Fail(SequenceItem failWith)
-        {
-            Logger.Error("Success:" + failWith.command);
+            if (ProgressLog.Length > 0)
+                Logger.Info($"{runid,padWidth} - {ProgressLog}... Failed at {failWith.command}. ");
+
+            ProgressLog.Clear();
+            Logger.Error($"{runid,padWidth} - Fail:{failWith.command}");
         }
 
         public void Progress(string message)
         {
-            Logger.Info(message);
+            ProgressLog.Append(message);
+            //Logger.Info(message);
         }
 
         public void Success(SequenceItem successWith)
         {
-            Logger.Info("Success:" + successWith.command);
+            //if (ProgressLog.Length > 0)
+            //    Logger.Info($"{runid,padWidth} - {ProgressLog}... Success!");
+
+            ProgressLog.Clear();
+            Logger.Info($"{runid,padWidth} - Success:{successWith.command}");
         }
 
         public void Trace(string message)
         {
             Logger.Debug(message);
+            Logger.Trace($"{runid,padWidth} - Trace:{message}");
         }
     }
 }

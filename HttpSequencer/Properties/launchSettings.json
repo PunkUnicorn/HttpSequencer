@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "HttpSequencer": {
+      "commandName": "Project",
+      "commandLineArgs": "-y testy.yaml"
+    }
+  }
+}

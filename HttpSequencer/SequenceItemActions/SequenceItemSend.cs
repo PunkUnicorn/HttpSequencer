@@ -45,7 +45,7 @@ namespace HttpSequencer.SequenceItemActions
                 };
                 this.WorkingUri = ScribanUtil.ScribanParse(this.sequenceItem.send.url, scribanModel);
 
-                this.state.Log?.Info($"Processing {this.WorkingUri}...");
+                this.state.ProgressLog?.Progress($"Processing {this.WorkingUri}...");
 
                 dynamic responseModel = null;
                 using (var client = MakeClientWithHeaders(this.state.CommandLineOptions, this.state.YamlOptions, this.sequenceItem))
@@ -70,7 +70,7 @@ namespace HttpSequencer.SequenceItemActions
 
         private async Task<HttpResponseMessage> DoSendAction(HttpClient client, object scribanModel)
         {
-            this.state.Log?.Info($" using method '{this.sequenceItem.send.http_method}'...");
+            this.state.ProgressLog?.Progress($" using method '{this.sequenceItem.send.http_method}'...");
 
             if (this.sequenceItem.send.query != null)
                 WorkingUri = AppendSendActionQuery(this.WorkingUri, scribanModel);
@@ -78,13 +78,13 @@ namespace HttpSequencer.SequenceItemActions
             if (this.sequenceItem.send?.body != null)
             {
                 this.WorkingBody = ScribanUtil.ScribanParse(this.sequenceItem.send.body, scribanModel);
-                this.state.Log?.Info($" using content body '{this.WorkingBody}'...");
+                this.state.ProgressLog?.Progress($" using content body \n'{this.WorkingBody}'\n...");
 
                 if (this.sequenceItem.send.save_body_filename != null)
                     SaveSendActionBody(scribanModel, WorkingBody);
             }
 
-            this.state.Log?.Info($" using url '{this.WorkingUri}'...");
+            this.state.ProgressLog?.Progress($" using url '{this.WorkingUri}'...");
 
             // Process the response content
             var contenType = this.sequenceItem.send.content_type ?? "text/plain";
@@ -125,7 +125,7 @@ namespace HttpSequencer.SequenceItemActions
             if (contentSaveName.Trim().Length > 0)
             {
                 var contentFn = Path.Combine(saveTo, ScribanUtil.ScribanParse(contentSaveName, saveModel));
-                this.state.Log?.Info($" saving content to '{contentFn }'...");
+                this.state.ProgressLog?.Progress($" saving content to '{contentFn }'...");
 
                 Directory.CreateDirectory(Path.GetDirectoryName(contentFn));
 
@@ -141,7 +141,7 @@ namespace HttpSequencer.SequenceItemActions
             if (httpResponse != null && responseSaveName.Trim().Length > 0)
             {
                 var nonContentFn = Path.Combine(saveTo, ScribanUtil.ScribanParse(responseSaveName, saveModel));
-                this.state.Log?.Info($" saving non content response to '{nonContentFn}'...");
+                this.state.ProgressLog?.Progress($" saving non content response to '{nonContentFn}'...");
 
                 var nonContent = new
                 {

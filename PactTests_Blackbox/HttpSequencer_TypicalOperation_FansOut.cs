@@ -24,7 +24,7 @@ namespace PactTests_Blackbox
             ConsumeTestYamlPact.MockProviderService.ClearInteractions();
         }
 
-        private YamlOptions MakeYamlSequence(int port)
+        private YamlOptions MakeYamlSequence(int port, string commandPostfix)
         {
             return new YamlOptions
             {
@@ -33,7 +33,7 @@ namespace PactTests_Blackbox
                     /* First */
                     new SequenceItem
                     {
-                        command = "one-of-two",
+                        command = $"one-of-two-{commandPostfix}",
                         send = new UrlRequest
                         {
                             header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
@@ -44,7 +44,7 @@ namespace PactTests_Blackbox
                     /* Second */
                     new SequenceItem
                     {
-                        command = "two-of-two",
+                        command = $"two-of-two-{commandPostfix}",
                         is_model_array = true,
                         send = new UrlRequest
                         {
@@ -86,7 +86,7 @@ namespace PactTests_Blackbox
             SharedPactScafolding.BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000002");
             SharedPactScafolding.BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000003");          
 
-            var testOptions = new Options { YamlDirect = MakeYamlSequence(Port) };
+            var testOptions = new Options { YamlDirect = MakeYamlSequence(Port, "expect-success") };
 
 
             /* 𝓐𝓬𝓽 */
@@ -131,7 +131,7 @@ namespace PactTests_Blackbox
             SharedPactScafolding.BuildFailConsumerForId(ConsumeTestYamlPact, "00000002");
             SharedPactScafolding.BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000003");
 
-            var testOptions = new Options { YamlDirect = MakeYamlSequence(Port) };
+            var testOptions = new Options { YamlDirect = MakeYamlSequence(Port, "expect-fail-on-one") };
 
 
             /* 𝓐𝓬𝓽 */
@@ -176,7 +176,7 @@ namespace PactTests_Blackbox
             SharedPactScafolding.BuildFailConsumerForId(ConsumeTestYamlPact, "00000002");
             SharedPactScafolding.BuildSuccessConsumerForId(ConsumeTestYamlPact, "00000003");            
 
-            var testOptions = new Options { YamlDirect = MakeYamlSequence(Port) };
+            var testOptions = new Options { YamlDirect = MakeYamlSequence(Port, "expect-fail-on-two") };
 
 
             /* 𝓐𝓬𝓽 */

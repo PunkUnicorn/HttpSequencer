@@ -1,5 +1,6 @@
 ﻿using CodenameGenerator;
 using HttpSequencer.SequenceItemActions;
+using Newtonsoft.Json;
 using NLog;
 using System;
 using System.Collections.Generic;
@@ -40,7 +41,8 @@ namespace HttpSequencer
                 state.CommandLineOptions = obj;
                 state.YamlOptions = yaml ?? throw new InvalidOperationException(nameof(RunSequenceAsync));
 
-                CompileSequence(state.YamlOptions);
+                var errors = CompileSequence(state.YamlOptions);
+                //if (errors != null) { log.Error(errors); return 2; }
 
                 var options = new ProcessSequenceItem.Options 
                 {
@@ -68,16 +70,16 @@ namespace HttpSequencer
             }
         }
 
-        private void CompileSequence(YamlOptions yamlOptions)
+        private string CompileSequence(YamlOptions yamlOptions)
         {
-            // compile scriban templates
-
-            // 
+            //var templateList = Scriban.Template.Parse(JsonConvert.SerializeObject(yamlOptions));
+            //if (templateList.HasErrors) return string.Join(Environment.NewLine, templateList.Messages);
+            return null;
         }
 
         private static IProgressLog MakeProgressLogger()
         {
-            return new DebugProgressLog();//ConsoleProgressLog();
+            return new NLogProgressLog(); //DebugProgressLog
         }
 
         private static string MakeRunId()

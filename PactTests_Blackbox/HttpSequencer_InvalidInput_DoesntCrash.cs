@@ -46,7 +46,7 @@ namespace PactTests_Blackbox
                 sequence_items = new List<SequenceItem> {
                     new SequenceItem
                     {
-                        command = "one-and-only",
+                        command = "invalid_url",
                         send = new UrlRequest
                         {
                             header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
@@ -101,7 +101,7 @@ namespace PactTests_Blackbox
                         /* First */
                         new SequenceItem
                         {
-                            command = "one-of-two",
+                            command = "one-of-two-url-ok",
                             send = new UrlRequest
                             {
                                 header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
@@ -112,7 +112,7 @@ namespace PactTests_Blackbox
                         /* Second */
                         new SequenceItem
                         {
-                            command = "two-of-two",
+                            command = "two-of-two-url-doesnt-exist",
                             send = new UrlRequest
                             {
                                 header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
@@ -140,7 +140,7 @@ namespace PactTests_Blackbox
         {
             const string invalidYamlContents = @"---
 sequence_items:
-  - command: start
+  - command: should-be-invalid-yaml
     send:
       http_m.... <!SYSTEM ERRORFZzzxsh he҉͇͈͎̞ ̙̫̖̻͖͞co̙͙̖̠̟̯̙m̫̦̹͔e͚̦͓̖̝s̘͖̣̼̫̠̙̀";
 

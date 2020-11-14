@@ -148,7 +148,7 @@ namespace PactTests_Whitebox
             /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮... */
             var testSequenceItem = new SequenceItem
             {
-                command = "check-item",
+                command = "check-item-expect-fail",
                 check = new SequenceCheck { pass_template = "false" }
             };
 
@@ -177,7 +177,7 @@ namespace PactTests_Whitebox
             /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮... */
             var testSequenceItem = new SequenceItem
             {
-                command = "test-check-item",
+                command = "test-check-item-sriban-expect-pass",
                 check = new SequenceCheck { pass_template = "{{if model.someData == 'the correct data'}}true{{else}}false{{end}}" }
             };
 
@@ -206,7 +206,7 @@ namespace PactTests_Whitebox
             /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮... */
             var testSequenceItem = new SequenceItem
             {
-                command = "some-check",
+                command = "some-check-sriban-expect-fail",
                 check = new SequenceCheck { pass_template = "{{if model.someData == 'the correct data'}}true{{else}}false{{end}}" }
             };
 
@@ -235,7 +235,7 @@ namespace PactTests_Whitebox
             /* 𝓐𝓻𝓻𝓪𝓷𝓰𝓮... */
             var testSequenceItem = new SequenceItem
             {
-                command = "some-check",
+                command = "some-check-sriban-expect-invalid-template",
                 check = new SequenceCheck { pass_template = "{{this is not valid scriban!}}true{{else}}false{{end}}" }
             };
 

@@ -22,7 +22,9 @@ namespace HttpSequencer.SequenceItemActions
 			return new string[] { };
 		}
 
-		public async Task<object> ActionAsync(CancellationToken cancelToken)
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        public async Task<object> ActionAsync(CancellationToken cancelToken)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
 			return FailableRun<object>(this, delegate {
 				++this.ActionExecuteCount;
@@ -31,7 +33,7 @@ namespace HttpSequencer.SequenceItemActions
 					throw new NullReferenceException($"{nameof(this.sequenceItem)}.{nameof(this.sequenceItem.run)} missing");
 
 
-				this.state.Log?.Info($"Running {this.sequenceItem.run.exec}...");
+				this.state.ProgressLog?.Progress($"Running {this.sequenceItem.run.exec}...");
 
 				var scribanModel = new { run_id = this.state.RunId, command_args = this.state.CommandLineOptions, this.model, sequence_item = this.sequenceItem };
 

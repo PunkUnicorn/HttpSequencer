@@ -42,7 +42,7 @@ namespace PactTests_Blackbox
 
             string yamlContents = $@"---
 sequence_items:
-  - command: start
+  - command: load-yaml-expect-success
     send:
       http_method: GET
       url: http://localhost:{testPort}";
@@ -289,7 +289,7 @@ sequence_items:
                     /* First */
                     new SequenceItem
                     {
-                        command = "one-of-three",
+                        command = "one-of-three-check-passes",
                         send = new UrlRequest
                         {
                             header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
@@ -300,7 +300,7 @@ sequence_items:
                     /* Second */
                     new SequenceItem
                     {
-                        command = "two-of-three",
+                        command = "two-of-three-check-passes",
                         is_model_array = true,
                         send = new UrlRequest
                         {
@@ -312,7 +312,7 @@ sequence_items:
                     /* Check */
                     new SequenceItem
                     {
-                        command = "three-of-three",
+                        command = "three-of-three-check-passes",
                         check = new SequenceCheck
                         {
                             pass_template = "{{if model.detail=='expectedMoreDetailString'}}true{{else}}false{{end}}"
@@ -383,7 +383,7 @@ sequence_items:
                     /* First */
                     new SequenceItem
                     {
-                        command = "one-of-three",
+                        command = "one-of-three-check-at-end-fails",
                         send = new UrlRequest
                         {
                             header = new KeyValueList { new KeyValuePair<string, string>("Accept", "application/json" ) },
@@ -394,7 +394,7 @@ sequence_items:
                     /* Second */
                     new SequenceItem
                     {
-                        command = "two-of-three",
+                        command = "two-of-three-check-at-end-fails",
                         is_model_array = true,
                         send = new UrlRequest
                         {
@@ -406,7 +406,7 @@ sequence_items:
                     /* Check */
                     new SequenceItem
                     {
-                        command = "three-of-three",
+                        command = "three-of-three-check-at-end-fails",
                         check = new SequenceCheck
                         {
                             pass_template = "{{if model.detail=='it will never be this'}}true{{else}}false{{end}}"

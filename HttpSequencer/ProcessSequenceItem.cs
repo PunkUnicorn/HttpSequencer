@@ -1,10 +1,8 @@
 ﻿using HttpSequencer.SequenceItemActions;
-using Newtonsoft.Json;
 using Polly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -29,37 +27,51 @@ namespace HttpSequencer
 
         public async Task<bool> ProcessSequenceItemAsync(Stack<ISequenceItemAction> retryAfter)
         {
-            options.state.ProgressLog?.Started(options.sequenceItem);
+            options.state.ProgressLog?.Started(options.state.RunId, options.sequenceItem);
 
-            var ourRetrys = new Stack<ISequenceItemAction>();
+            try
+            { 
+                var ourRetrys = new Stack<ISequenceItemAction>();
 
-            var result = new SequenceItemDispatcherResult();
+                var dispatcherResult = new SequenceItemDispatcherResult();
 
-            if (options.sequenceItem.is_model_array)
-            {
-                var itemsRunning = new List<Task<SequenceItemDispatcherResult>>();
-                foreach (var item in options.model as IEnumerable<object> ?? new object[] { })
-                    itemsRunning.Add(new ProcessSequenceItem(new ProcessSequenceItem.Options
-                    { 
-                        state = options.state, 
-                        parent = options.parent, 
-                        model = item, 
-                        sequenceItem = options.sequenceItem, 
-                        nextSequenceItems = options.nextSequenceItems, 
-                        breadcrumbs = options.breadcrumbs
-                    }).SequenceItemDispatcherAsync(ourRetrys));
+                if (options.sequenceItem.is_model_array)
+                {
+                    var itemsRunning = new List<Task<SequenceItemDispatcherResult>>();
+                    foreach (var item in options.model as IEnumerable<object> ?? new object[] { })
+                        itemsRunning.Add(new ProcessSequenceItem(new ProcessSequenceItem.Options
+                        {
+                            state = options.state,
+                            parent = options.parent,
+                            model = item,
+                            sequenceItem = options.sequenceItem,
+                            nextSequenceItems = options.nextSequenceItems,
+                            breadcrumbs = options.breadcrumbs
+                        }).SequenceItemDispatcherAsync(ourRetrys));
 
-                var allResults = await Task<bool[]>.WhenAll(itemsRunning);
-                result.IsSuccess = allResults.All(a => a.IsSuccess);
-                result.Model = allResults.Select(s => s.Model).ToArray();
+                    var allResults = await Task<bool[]>.WhenAll(itemsRunning);
+
+                    dispatcherResult.IsSuccess = allResults.All(a => a.IsSuccess);
+                    dispatcherResult.Model = allResults.Select(s => s.Model).ToArray();
+                    //dispatcherResult.SequenceItemAction = allResults.SelectMany(s => s.SequenceItemAction).ToArray();
+                }
+                else dispatcherResult = await SequenceItemDispatcherAsync(ourRetrys);
+
+                var cancelToken = new CancellationToken();
+                if (ourRetrys.Any())
+                    dispatcherResult = await SequenceItemRetryDispatcherAsync(cancelToken, false, ourRetrys, options.state, retryAfter, options.breadcrumbs);
+
+                if (dispatcherResult.IsSuccess) 
+                    options.state.ProgressLog?.Success(options.sequenceItem);
+                else
+                    options.state.ProgressLog?.Fail(options.breadcrumbs, options.sequenceItem);
+
+                return dispatcherResult.IsSuccess;
             }
-            else result = await SequenceItemDispatcherAsync(ourRetrys);
-
-            var cancelToken = new CancellationToken();
-            if (ourRetrys.Any())
-                result = await SequenceItemRetryDispatcherAsync(cancelToken, false, ourRetrys, options.state, retryAfter, options.breadcrumbs);
-
-            return result.IsSuccess;
+            finally
+            {
+                
+            }
         }
 
         public async Task<SequenceItemDispatcherResult> SequenceItemRetryDispatcherAsync(CancellationToken cancelToken, bool isInstantRetry, IEnumerable<ISequenceItemAction> toRetry, RunState state, Stack<ISequenceItemAction> retryAfterList, Stack<KeyValuePair<string, ISequenceItemAction>> breadcrumbs)
@@ -75,7 +87,7 @@ namespace HttpSequencer
                     if (retriesLeft <= 0)
                     {
                         sequenceItemAction.Fail();
-                        allResults.Add(new SequenceItemDispatcherResult { IsSuccess = false, Model = null });
+                        allResults.Add(new SequenceItemDispatcherResult { IsSuccess = false, Model = null });//, SequenceItemAction = new[] { sequenceItemAction } });
                         continue;
                     }
 
@@ -85,7 +97,7 @@ namespace HttpSequencer
 
                     var result = await policy.Execute(async () => await sequenceItemAction.ActionAsync(cancelToken));
 
-                    allResults.Add(new SequenceItemDispatcherResult { IsSuccess = !sequenceItemAction.IsFail, Model = result });
+                    allResults.Add(new SequenceItemDispatcherResult { IsSuccess = !sequenceItemAction.IsFail, Model = result });//, SequenceItemAction = new[] { sequenceItemAction } });
                 }
                 catch (Exception e)
                 {
@@ -99,13 +111,15 @@ namespace HttpSequencer
                         retryAfterList.Push(sequenceItemAction);
                 }
 
-            return new SequenceItemDispatcherResult { IsSuccess = allResults.All(a => a.IsSuccess), Model = allResults.Select(s=>s.Model).ToArray()};
+            return new SequenceItemDispatcherResult { IsSuccess = allResults.All(a => a.IsSuccess), Model = allResults.Select(s=>s.Model).ToArray() };//, SequenceItemAction = allResults.SelectMany(s => s.SequenceItemAction).ToArray() };
         }
 
         public class SequenceItemDispatcherResult
         {
             public bool IsSuccess { get; set; }
             public object Model { get; set; }
+
+            //public ISequenceItemAction[] SequenceItemAction { get; set; }
         }
 
         public async Task<SequenceItemDispatcherResult> SequenceItemDispatcherAsync(Stack<ISequenceItemAction> retryAfter)
@@ -137,7 +151,7 @@ namespace HttpSequencer
                 var result = await sequenceItemAction.ActionAsync(cancelToken);
 
                 if (sequenceItemAction.IsFail)
-                    return new SequenceItemDispatcherResult{ IsSuccess = false, Model = result };
+                    return new SequenceItemDispatcherResult{ IsSuccess = false, Model = result };//, SequenceItemAction = new [] { sequenceItemAction } };
 
                 if (options.nextSequenceItems?.Any() ?? false)
                 {
@@ -155,7 +169,7 @@ namespace HttpSequencer
                           Model = result };
                 }
 
-                return new SequenceItemDispatcherResult { IsSuccess = true, Model = result };
+                return new SequenceItemDispatcherResult { IsSuccess = true, Model = result };//, SequenceItemAction = new [] { sequenceItemAction }  };
             }
             catch (Exception e)
             {
@@ -163,7 +177,7 @@ namespace HttpSequencer
                 && !CanDealWithException(e, true, sequenceItemAction, options.sequenceItem, options.breadcrumbs))
                     sequenceItemAction.Fail(e);
 
-                return new SequenceItemDispatcherResult { IsSuccess = !sequenceItemAction.IsFail };
+                return new SequenceItemDispatcherResult { IsSuccess = !sequenceItemAction.IsFail, Model = null };//, SequenceItemAction = new [] { sequenceItemAction } };
             }
             finally
             {

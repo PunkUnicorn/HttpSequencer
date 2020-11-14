@@ -6,7 +6,7 @@ namespace HttpSequencer
 {
 	public class Options
 	{
-		[Option('y', "yaml file", Required = false, HelpText = "Yaml filename")]
+		[Option('y', "yamlfile", Required = false, HelpText = "Yaml filename")]
 		public string YamlFile { get; set; }
 
 		public YamlOptions YamlDirect { get; set; }

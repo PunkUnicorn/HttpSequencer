@@ -1,8 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl>https://github.com/PunkUnicorn/HttpSequencer</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/PunkUnicorn/HttpSequencer</RepositoryUrl>
+    <Copyright>Matthew Cocks</Copyright>
+    <Description>A yaml driven http sequencer, chaining results using the templating library Scriban. Items in the chain can be http requests, shell commands (stdout passed through as the model), boolean checks (using Scriban model evaluation), and HAr file walks. HAr walking is pretty basic though</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +27,9 @@
   <ItemGroup>
     <None Update="NLog.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="testy.yaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

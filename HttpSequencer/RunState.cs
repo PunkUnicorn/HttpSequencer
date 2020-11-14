@@ -12,8 +12,6 @@ namespace HttpSequencer
             //FailedSequenceActions = new List<ISequenceItemAction>();
         }
 
-        //public List<ISequenceItemAction> FailedSequenceActions { get; set; }
-
         public ILogger Log { get; set; }
 
         public string RunId { get; set; }

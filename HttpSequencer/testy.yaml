@@ -1,0 +1,41 @@
+﻿#
+---
+#header:
+#  - key: auth
+#    value: '{{args.Auth}}'
+#client_timeout_seconds: 30
+#run_id: '{{args.RunId}}'
+#base_url: 
+sequence_items:
+#  - command: start
+#    breadcrumb: '{{command}}, {{send.url}}'
+#    send:
+#      http_method: GET
+#     base_url:  - to override the global base_url
+#      url: http://{{csvRow.SomeColumnHeader}}.com
+#     content_type:
+#     query:
+#       - key: 
+#         value: 
+#     header: - to add to the global one
+#       - key: auth
+#         value: '{{args.Auth}}'
+#     body: > 
+#       '{
+#        "some_value": "{{csvRow.SomeContentColumnName}}"'
+#       }'
+#     save_body_filename: './results/{{run_id}}/{{csvRow.SomeOtherColumnHeader}}-body.json'
+#     save_response_filename: './results/{{run_id}}/{{csvRow.SomeOtherColumnHeader}}-response.json'
+
+  - command: starting-har
+    breadcrumb: '{{command}}, {{har.direct.Log.Entries.length}}'
+    har:
+      file:  C:\github\HttpSequencer\HttpSequencer\fullcards.har
+#     send_template: - design idea, not implemented
+#       save_body_filename: './results/{{run_id}}/{{csvRow.SomeOtherColumnHeader}}-har/{{entry.index}}/body/{{entry.url}}
+#       save_response_filename: './results/{{run_id}}/{{csvRow.SomeOtherColumnHeader}}-har/{{entryIndex}}/response.bin
+
+  - command: return
+    breadcrumb:  '{{command}}, {{model}}'
+    return:
+      direct: '{{stack[1].send.url}}'

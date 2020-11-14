@@ -45,7 +45,7 @@ namespace HttpSequencer
                     nextSequenceItems = results.Skip(1), 
                     breadcrumbs = new Stack<KeyValuePair<string, ISequenceItemAction>>()
                 };
-
+                
                 var retryAfter = new Stack<ISequenceItemAction>();
                 var result = await new ProcessSequenceItem(options).SequenceItemDispatcherAsync(retryAfter);
                 
